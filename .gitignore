@@ -1,0 +1,51 @@
+# General
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# Node.js (Frontend)
+frontend/node_modules/
+frontend/build/
+frontend/.env
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# React-specific
+frontend/public/*.map
+frontend/public/static/
+
+# .NET (Backend)
+backend/bin/
+backend/obj/
+backend/*.user
+backend/*.suo
+backend/*.sln.docstates
+backend/.vs/
+backend/appsettings.*.json
+backend/Properties/launchSettings.json
+
+# Logs
+*.log
+backend/logs/
+frontend/logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE settings
+*.idea/
+*.iml
+*.vs/
+
+# OS-specific
+*.swp
+*.swo
+*.bak
+*.orig
+
+# Images and assets (if generated dynamically)
+frontend/src/assets/*.tmp
