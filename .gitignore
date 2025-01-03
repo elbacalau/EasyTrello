@@ -25,6 +25,7 @@ backend/*.suo
 backend/*.sln.docstates
 backend/.vs/
 backend/appsettings.*.json
+backend/appsettings.json
 backend/Properties/launchSettings.json
 
 # Logs
@@ -49,3 +50,6 @@ frontend/logs/
 
 # Images and assets (if generated dynamically)
 frontend/src/assets/*.tmp
+
+
+.env
