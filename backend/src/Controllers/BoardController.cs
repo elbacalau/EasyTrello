@@ -1,16 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.src.Controllers
 {
     [ApiController]
     [Route("api/board")]
-    public class BoardController
+    [Authorize]
+    public class BoardController : ControllerBase
     {
-
-        public static void Main(string[] args)
-        {
-            
-        }
+        
+        
 
     }
 }
