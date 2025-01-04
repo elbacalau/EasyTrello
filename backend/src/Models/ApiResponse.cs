@@ -2,8 +2,8 @@ namespace backend.src.Models
 {
     public class ApiResponse<T>
     {
-        public string? Result { get; set; }
-        public T? Detail { get; set; }
+        public required string Result { get; set; }
+        public required T Detail { get; set; }
     }
 
     public class ErrorResponse

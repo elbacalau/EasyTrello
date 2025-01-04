@@ -1,4 +1,5 @@
 using System.Net;
+using backend.src.Infrastructure.Helpers;
 using backend.src.Models;
 
 namespace backend.src.Middelware
@@ -6,24 +7,29 @@ namespace backend.src.Middelware
     public class ExceptionHandlingMiddleware(RequestDelegate next)
     {
         private readonly RequestDelegate _next = next;
+
         public async System.Threading.Tasks.Task Invoke(HttpContext context)
         {
             try
             {
                 await _next(context);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                // unauthorized access handling
+                await HandleExceptionAsync(context, ex, HttpStatusCode.Unauthorized, ErrorMessages.Unauthorized);
+            }
             catch (ArgumentException ex)
             {
                 // invalid data handling
-                await HandleExceptionAsync(context, ex, HttpStatusCode.BadRequest, "Invalid data");
+                await HandleExceptionAsync(context, ex, HttpStatusCode.BadRequest, ErrorMessages.InvalidData);
             }
             catch (Exception ex)
             {
                 // generic error handling
-                await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError, "Server error");
+                await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError, ErrorMessages.ServerError);
             }
         }
-
 
         private static async System.Threading.Tasks.Task HandleExceptionAsync(HttpContext context, Exception ex, HttpStatusCode statusCode, string message)
         {
@@ -43,6 +49,4 @@ namespace backend.src.Middelware
             await context.Response.WriteAsJsonAsync(response);
         }
     }
-
-
 }
