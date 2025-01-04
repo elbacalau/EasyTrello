@@ -1,6 +1,7 @@
 using backend.Models;
 using backend.src.Models;
 using backend.src.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.src.Controllers
@@ -39,6 +40,7 @@ namespace backend.src.Controllers
         }
 
         // endpoint para obtener un usuario por id
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
