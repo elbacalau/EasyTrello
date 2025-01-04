@@ -22,6 +22,8 @@ builder.Services.AddSwaggerGen();
 // register services
 builder.Services.AddScoped<Functions>(); 
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<AuthHelper>();
+builder.Services.AddScoped<AuthService>();
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = $"Server=localhost;Port=3306;Database={Environment.GetEnvironmentVariable("MYSQL_DATABASE")};" +
