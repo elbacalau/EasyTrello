@@ -14,8 +14,8 @@ namespace backend.src.Controllers
     {
 
         private readonly AuthService _authService = authService;
-        
-        [HttpPost("/login")]
+
+        [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             if (request == null)
@@ -54,6 +54,18 @@ namespace backend.src.Controllers
                     Detail = token
                 });
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new ApiResponse<ErrorResponse>
+                {
+                    Result = "error",
+                    Detail = new ErrorResponse
+                    {
+                        Message = ex.Message,
+                        Code = ErrorCodes.Unauthorized
+                    }
+                });
+            }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<ErrorResponse>
@@ -67,6 +79,7 @@ namespace backend.src.Controllers
                 });
             }
         }
-        
+
+
     }
 }
