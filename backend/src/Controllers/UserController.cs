@@ -1,5 +1,6 @@
 using backend.Data;
 using backend.Models;
+using backend.src.Infrastructure.Helpers;
 using backend.src.Models;
 using backend.src.Service;
 using Microsoft.AspNetCore.Mvc;
@@ -26,45 +27,102 @@ namespace backend.src.Controllers
                     Result = "error",
                     Detail = new ErrorResponse
                     {
-                        Message = "User data is required",
+                        Message = ErrorMessages.InvalidData,
                         Code = "400"
                     }
                 });
             }
 
-            var newUser = await _userService.CreateUserAsync(user);
-            return Ok(new ApiResponse<User>
+            try
             {
-                Result = "success",
-                Detail = newUser
-            });
-        }
+                var newUser = await _userService.CreateUserAsync(user);
 
+                return Ok(
+                  new ApiResponse<User>
+                  {
+                      Result = "success",
+                      Detail = newUser
+                  }
+                );
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new ApiResponse<ErrorResponse>
+                {
+                    Result = "error",
+                    Detail = new ErrorResponse
+                    {
+                        Message = $"{ErrorMessages.InvalidData}: {ex.Message}",
+                        Code = "400"
+                    }
+                });
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<ErrorResponse>
+                {
+                    Result = "error",
+                    Detail = new ErrorResponse
+                    {
+                        Message = $"{ErrorMessages.ServerError}: {ex.Message}",
+                        Code = "500"
+                    }
+                });
+            }
+        }
 
         // endpoint para obtener un usuario por id
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-
-            if (user == null)
+            try
             {
-                return NotFound(new ApiResponse<ErrorResponse>
+                var user = await _userService.GetUserByIdAsync(id);
+
+                if (user == null)
+                {
+                    return NotFound(new ApiResponse<ErrorResponse>
+                    {
+                        Result = "error",
+                        Detail = new ErrorResponse
+                        {
+                            Message = ErrorMessages.NotFound,
+                            Code = "404"
+                        }
+                    });
+                }
+
+                return Ok(new ApiResponse<User>
+                {
+                    Result = "success",
+                    Detail = user
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new ApiResponse<ErrorResponse>
                 {
                     Result = "error",
                     Detail = new ErrorResponse
                     {
-                        Message = "User not found",
-                        Code = "404"
+                        Message = $"{ErrorMessages.InvalidData}: {ex.Message}",
+                        Code = "400"
                     }
                 });
             }
-
-            return Ok(new ApiResponse<User>
+            catch (Exception ex)
             {
-                Result = "success",
-                Detail = user
-            });
+                return StatusCode(500, new ApiResponse<ErrorResponse>
+                {
+                    Result = "error",
+                    Detail = new ErrorResponse
+                    {
+                        Message = $"{ErrorMessages.ServerError}: {ex.Message}",
+                        Code = "500"
+                    }
+                });
+            }
         }
 
 
