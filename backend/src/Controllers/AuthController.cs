@@ -11,7 +11,7 @@ namespace backend.src.Controllers
     public class AuthController(AuthService authService) : ControllerBase
     {
         private readonly AuthService _authService = authService;
-    
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -30,10 +30,18 @@ namespace backend.src.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             RegisterRequest newUser = await _authService.RegisterAsync(request);
-            return Ok(new ApiResponse<RegisterRequest>
+            UserResponseDTO userResponse = new()
+            {
+                FirstName = newUser.FirstName,
+                LastName = newUser.LastName,
+                Email = newUser.Email,
+                PhoneNumber = newUser.PhoneNumber!
+            };
+
+            return Ok(new ApiResponse<UserResponseDTO>
             {
                 Result = "success",
-                Detail = newUser
+                Detail = userResponse
             });
         }
     }
