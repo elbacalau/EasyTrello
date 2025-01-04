@@ -1,11 +1,12 @@
 using backend.Data;
-using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 
+using backend.src.Infrastructure.Mapper;
 var builder = WebApplication.CreateBuilder(args);
 
 DotNetEnv.Env.Load("../.env");
 
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
