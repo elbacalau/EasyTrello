@@ -1,7 +1,5 @@
 using System.Net;
-using System.Net.Http.Json;
 using backend.src.Models;
-using Microsoft.AspNetCore.Http;
 
 namespace backend.src.Middelware
 {
