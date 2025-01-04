@@ -23,7 +23,7 @@ namespace backend.src.Service
         }
 
 
-        public async Task<RegisterRequest>? RegisterAsync(RegisterRequest request)
+        public async Task<RegisterRequest> RegisterAsync(RegisterRequest request)
         {   
             bool userExists = _context.Users.Any(x => x.Email == request.Email);
             if (userExists)
