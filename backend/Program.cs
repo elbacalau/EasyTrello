@@ -4,16 +4,19 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-DotNetEnv.Env.Load();
+DotNetEnv.Env.Load("../.env");
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(builder.Configuration.GetConnectionString("MySqlConnection"), 
-    new MySqlServerVersion(new Version(8, 0, 25))));
-
+{
+    var connectionString = $"Server=localhost;Port=3306;Database={Environment.GetEnvironmentVariable("MYSQL_DATABASE")};" +
+                           $"User={Environment.GetEnvironmentVariable("MYSQL_USER")};" +
+                           $"Password={Environment.GetEnvironmentVariable("MYSQL_PASSWORD")};";
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 25)));
+});
 
 builder.Services.AddCors(options =>
 {

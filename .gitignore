@@ -27,6 +27,7 @@ backend/.vs/
 backend/appsettings.*.json
 backend/appsettings.json
 backend/Properties/launchSettings.json
+backend/Migrations/
 
 # Logs
 *.log
