@@ -1,0 +1,50 @@
+using System.Net;
+using System.Net.Http.Json;
+using backend.src.Models;
+using Microsoft.AspNetCore.Http;
+
+namespace backend.src.Middelware
+{
+    public class ExceptionHandlingMiddleware(RequestDelegate next)
+    {
+        private readonly RequestDelegate _next = next;
+        public async System.Threading.Tasks.Task Invoke(HttpContext context)
+        {
+            try
+            {
+                await _next(context);
+            }
+            catch (ArgumentException ex)
+            {
+                // invalid data handling
+                await HandleExceptionAsync(context, ex, HttpStatusCode.BadRequest, "Invalid data");
+            }
+            catch (Exception ex)
+            {
+                // generic error handling
+                await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError, "Server error");
+            }
+        }
+
+
+        private static async System.Threading.Tasks.Task HandleExceptionAsync(HttpContext context, Exception ex, HttpStatusCode statusCode, string message)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = (int)statusCode;
+
+            var response = new ApiResponse<ErrorResponse>
+            {
+                Result = "error",
+                Detail = new ErrorResponse
+                {
+                    Message = $"{message}: {ex.Message}",
+                    Code = ((int)statusCode).ToString()
+                }
+            };
+
+            await context.Response.WriteAsJsonAsync(response);
+        }
+    }
+
+
+}

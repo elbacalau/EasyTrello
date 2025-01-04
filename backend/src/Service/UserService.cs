@@ -15,14 +15,19 @@ namespace backend.src.Service
 
         public async Task<User> CreateUserAsync(User user)
         {
+            if (string.IsNullOrEmpty(user.Password) ||user.Password.Length < 6)
+            {
+                throw new ArgumentNullException("Password must be at least 6 characters long");
+            }
             
             try
             {
                 user.Password = _functions.EncryptPassword(user.Password);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw new Exception("Error while hashing password");
+                Console.WriteLine($"Error: {ex.Message}");
+                throw;
             }
             
             _context.Users.Add(user);  
