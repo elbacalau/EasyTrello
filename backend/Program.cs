@@ -51,17 +51,19 @@ builder.Services.AddAuthentication(cfg => {
 }).AddJwtBearer(x => {
     x.RequireHttpsMetadata = false;
     x.SaveToken = false;
-    x.TokenValidationParameters = new TokenValidationParameters {
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8
-            .GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET")!)
+            Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET")!)
         ),
-        ValidateIssuer = false,
+        ValidateIssuer = false,  
         ValidateAudience = false,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero, 
+        RequireExpirationTime = true
     };
 });
+
 
 
 var app = builder.Build();
@@ -74,6 +76,7 @@ if (app.Environment.IsDevelopment())
 
 // middlewares
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<TokenValidationMiddleware>();
 
 // config middlewares
 app.UseHttpsRedirection();
