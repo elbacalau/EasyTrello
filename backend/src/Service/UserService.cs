@@ -12,6 +12,7 @@ namespace backend.src.Service
 
         public async Task<User> CreateUserAsync(User user)
         {
+            // TODO: Encrypt password
             _context.Users.Add(user);  
             await _context.SaveChangesAsync();
             return user;  
