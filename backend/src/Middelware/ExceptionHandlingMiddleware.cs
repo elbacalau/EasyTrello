@@ -27,7 +27,7 @@ namespace backend.src.Middelware
             catch (Exception ex)
             {
                 // generic error handling
-                await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError, ErrorMessages.ServerError);
+                await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError, ErrorMessages.InternalServerError);
             }
         }
 
