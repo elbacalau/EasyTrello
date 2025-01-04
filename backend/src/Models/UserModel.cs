@@ -1,3 +1,6 @@
+using backend.src.Models;
+using backend.src.Models.backend.src.Models;
+
 namespace backend.Models
 {
     public class User
@@ -12,5 +15,8 @@ namespace backend.Models
         public DateTime DateCreated { get; set; }
         public DateTime? DateModified { get; set; } 
         public bool IsActive { get; set; }       
+
+        // relationships
+        public ICollection<Board> Boards { get; set; } = [];
     }
 }

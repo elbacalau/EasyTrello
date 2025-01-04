@@ -1,13 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using backend.src.Models;
+using backend.src.DTOs.BoardDTOs;
+using backend.src.Models.backend.src.Models;
 
 namespace backend.src.Interfaces
 {
     public interface IBoardService
     {
-        Task<Board> CreateBoard(Board board);
+        Task<BoardRequest> CreateBoard(BoardRequest board);
+
+        Task<List<Board>> GetBoards(int userId);
     }
 }

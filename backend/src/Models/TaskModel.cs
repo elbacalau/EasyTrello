@@ -1,4 +1,5 @@
 using backend.Models;
+using backend.src.Models.backend.src.Models;
 
 namespace backend.src.Models
 {

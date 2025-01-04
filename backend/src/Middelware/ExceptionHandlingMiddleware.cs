@@ -14,6 +14,11 @@ namespace backend.src.Middelware
             {
                 await _next(context);
             }
+            catch (InvalidOperationException ex)
+            {
+                // not found handling
+                await HandleExceptionAsync(context, ex, HttpStatusCode.NotFound, ex.Message);
+            }
             catch (UnauthorizedAccessException ex)
             {
                 // unauthorized access handling
