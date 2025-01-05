@@ -49,11 +49,14 @@ namespace backend.src.Service
                 }
             }
 
+            User creatorUser = await _context.Users.FindAsync(userId) ?? throw new ArgumentException("User not found");
+
             var newBoard = _mapper.Map<Board>(board);
             newBoard.CreatedByUserId = userId;
             newBoard.BackgroundColor = "#FFFFFF";
             newBoard.CreatedAt = DateTime.UtcNow;
             newBoard.UpdatedAt = DateTime.UtcNow;
+            newBoard.AssignedUsers.Add(creatorUser);
 
             _context.Boards.Add(newBoard);
             await _context.SaveChangesAsync();
