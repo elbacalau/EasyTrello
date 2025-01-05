@@ -8,5 +8,7 @@ namespace backend.src.Interfaces
         Task<BoardRequest> CreateBoard(BoardRequest board);
         Task<List<BoardResponse>> GetBoards(int userId);
         Task<BoardResponse> AssignUserToBoard(AssignUserRequest assignUserRequest);
+        Task DeleteBoard(int boardId);
+        Task DeleteBoards(int userId);
     }
 }

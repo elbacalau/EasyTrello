@@ -61,6 +61,30 @@ namespace backend.src.Service
             return _mapper.Map<BoardRequest>(newBoard);
         }
 
+        public async Task DeleteBoard(int boardId)
+        {
+            // found board
+            Board board = await _context.Boards.FindAsync(boardId) ?? throw new ArgumentException("Board not found");
+            _context.Boards.Remove(board);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteBoards(int userId)
+        {
+            // found boards
+            List<Board> boards = await _context.Boards
+                .Where(b => b.CreatedByUserId == userId)
+                .ToListAsync();
+
+            if (!boards.Any())
+            {
+                throw new ArgumentException("No boards found for the given user.");
+            }          
+            _context.Boards.RemoveRange(boards);
+            await _context.SaveChangesAsync(); 
+
+        }
+
         public Task<List<BoardResponse>> GetBoards(int userId)
         {
             // found user
@@ -73,6 +97,7 @@ namespace backend.src.Service
 
             return Task.FromResult(_mapper.Map<List<BoardResponse>>(boards));
         }
+        
 
 
     }

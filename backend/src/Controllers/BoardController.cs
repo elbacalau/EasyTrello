@@ -1,6 +1,5 @@
 using backend.src.DTOs.BoardDTOs;
 using backend.src.Models;
-using backend.src.Models.backend.src.Models;
 using backend.src.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -46,7 +45,25 @@ namespace backend.src.Controllers
                 Result = "success",
                 Detail = response
             });
-
         }
+
+
+        // delete entirely board from user
+        [HttpDelete("{boardId}")]
+        public async Task<IActionResult> DeleteBoard(int boardId)
+        {
+            await _boardService.DeleteBoard(boardId);
+            return NoContent();
+        }
+
+
+        // delete all boards from user
+        [HttpDelete("deleteByUser/{userId}")]
+        public async Task<IActionResult> DeleteBoardsByUserId(int userId)
+        {
+            await _boardService.DeleteBoards(userId);
+            return NoContent(); 
+        }
+
     }
 }
