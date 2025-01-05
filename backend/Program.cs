@@ -25,6 +25,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AuthHelper>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<BoardService>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = $"Server=localhost;Port=3306;Database={Environment.GetEnvironmentVariable("MYSQL_DATABASE")};" +
