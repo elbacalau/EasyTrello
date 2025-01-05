@@ -7,6 +7,6 @@ namespace backend.src.Interfaces
     {
         Task<BoardRequest> CreateBoard(BoardRequest board);
 
-        Task<List<Board>> GetBoards(int userId);
+        Task<List<BoardResponse>> GetBoards(int userId);
     }
 }

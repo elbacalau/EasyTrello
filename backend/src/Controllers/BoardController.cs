@@ -16,20 +16,24 @@ namespace backend.src.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateBoard([FromBody] BoardRequest board)
         {
-            return Ok();
+            BoardRequest boardRequest = await _boardService.CreateBoard(board);
+            return Ok(new ApiResponse<BoardRequest>
+            {
+                Result = "success",
+                Detail = boardRequest
+            });
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBoard(int id)
         {
-            List<Board> boards = await _boardService.GetBoards(id);
+            List<BoardResponse> boards = await _boardService.GetBoards(id);
 
-            return Ok(new ApiResponse<List<Board>>
+            return Ok(new ApiResponse<List<BoardResponse>>
             {
                 Result = "success",
                 Detail = boards
             });
         }
-
     }
 }
