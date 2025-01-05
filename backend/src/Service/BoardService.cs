@@ -23,7 +23,7 @@ namespace backend.src.Service
             Board board = _context.Boards.SingleOrDefault(b => b.Id == assignUserRequest.BoardId) ?? throw new ArgumentException("Board not found");
             User user = _context.Users.SingleOrDefault(u => u.Id == assignUserRequest.UserId) ?? throw new ArgumentException("User not found");
 
-            board.AssignedUser = user;
+            board.AssignedUsers.Add(user);
             board.AssignedUserId = user.Id;
 
             _context.Boards.Update(board);
@@ -65,9 +65,13 @@ namespace backend.src.Service
         {
             // found user
             var user = _context.Users.FirstOrDefault(u => u.Id == userId) ?? throw new UnauthorizedAccessException("User not found");
-            List<Board> boards = [.. _context.Boards.Where(b => b.CreatedByUserId == userId).Include(b => b.AssignedUser)];
-    
-            return Task.FromResult(boards.Select(b => _mapper.Map<BoardResponse>(b)).ToList());
+
+            var boards = _context.Boards
+                .Where(b => b.CreatedByUserId == userId)
+                .Include(b => b.AssignedUsers)
+                .ToList();
+
+            return Task.FromResult(_mapper.Map<List<BoardResponse>>(boards));
         }
 
 

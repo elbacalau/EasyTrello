@@ -15,7 +15,7 @@ namespace backend.src.DTOs.BoardDTOs
         public string? Visibility { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
-        public UserResponse? AssignedUser {get; set; }
+        public List<UserResponse> AssignedUsers {get; set; } = [];
         public string? BackgroundColor { get; set; }
     }
 
