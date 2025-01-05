@@ -16,7 +16,7 @@ namespace backend.src.Models
             public int CreatedByUserId { get; set; } 
             public User CreatedByUser { get; set; } = null!; 
             public int? AssignedUserId { get; set; }
-            public User? AssignedUser { get; set; }
+            public ICollection<User> AssignedUsers { get; set; } = [];
             public string? BackgroundColor { get; set; }
             public DateTime? DeletedAt { get; set; }
 

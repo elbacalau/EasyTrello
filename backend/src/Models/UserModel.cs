@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json.Serialization;
 using backend.src.Models.backend.src.Models;
 
@@ -19,5 +20,9 @@ namespace backend.Models
         // relationships
         [JsonIgnore]
         public ICollection<Board> Boards { get; set; } = [];
+        
+        [JsonIgnore]
+        public ICollection<Board> AssignedBoards {get; set; } = [];
+
     }
 }
