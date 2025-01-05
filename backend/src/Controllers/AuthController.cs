@@ -29,7 +29,7 @@ namespace backend.src.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             RegisterRequest newUser = await _authService.RegisterAsync(request);
-            UserResponseDTO userResponse = new()
+            UserResponse userResponse = new()
             {
                 FirstName = newUser.FirstName,
                 LastName = newUser.LastName,
@@ -37,7 +37,7 @@ namespace backend.src.Controllers
                 PhoneNumber = newUser.PhoneNumber!
             };
 
-            return Ok(new ApiResponse<UserResponseDTO>
+            return Ok(new ApiResponse<UserResponse>
             {
                 Result = "success",
                 Detail = userResponse

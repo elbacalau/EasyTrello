@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace backend.src.DTOs
 {
-    public class UserResponseDTO
+    public class UserResponse
     {
         public required string FirstName { get; set; }
         public required string LastName { get; set; }

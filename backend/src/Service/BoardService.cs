@@ -1,10 +1,12 @@
 using System.Security.Claims;
 using AutoMapper;
 using backend.Data;
+using backend.Models;
 using backend.src.DTOs.BoardDTOs;
 using backend.src.Interfaces;
 using backend.src.Models.backend.src.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 namespace backend.src.Service
@@ -14,6 +16,22 @@ namespace backend.src.Service
         private readonly AppDbContext _context = context;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly IMapper _mapper = mapper;
+
+        public async Task<BoardResponse> AssignUserToBoard(AssignUserRequest assignUserRequest)
+        {
+            // verify if board and user exists
+            Board board = _context.Boards.SingleOrDefault(b => b.Id == assignUserRequest.BoardId) ?? throw new ArgumentException("Board not found");
+            User user = _context.Users.SingleOrDefault(u => u.Id == assignUserRequest.UserId) ?? throw new ArgumentException("User not found");
+
+            board.AssignedUser = user;
+            board.AssignedUserId = user.Id;
+
+            _context.Boards.Update(board);
+            await _context.SaveChangesAsync();
+
+
+            return _mapper.Map<BoardResponse>(board);
+        }
 
         public async Task<BoardRequest> CreateBoard(BoardRequest board)
         {
@@ -47,10 +65,11 @@ namespace backend.src.Service
         {
             // found user
             var user = _context.Users.FirstOrDefault(u => u.Id == userId) ?? throw new UnauthorizedAccessException("User not found");
-            List<Board> boards = [.. _context.Boards.Where(b => b.CreatedByUserId == userId)];
+            List<Board> boards = [.. _context.Boards.Where(b => b.CreatedByUserId == userId).Include(b => b.AssignedUser)];
+    
             return Task.FromResult(boards.Select(b => _mapper.Map<BoardResponse>(b)).ToList());
         }
 
-        
+
     }
 }

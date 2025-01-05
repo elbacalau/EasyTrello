@@ -1,4 +1,6 @@
 using AutoMapper;
+using backend.Models;
+using backend.src.DTOs;
 using backend.src.DTOs.BoardDTOs;
 using backend.src.DTOs.TaskDTOs;
 using backend.src.Models.backend.src.Models;
@@ -21,8 +23,9 @@ namespace backend.src.Infrastructure.Mapper
 
             // MAPS
             CreateMap<Board, BoardRequest>();
-            CreateMap<Board, BoardResponse>();
+            CreateMap<Board, BoardResponse>().ForMember(dest => dest.AssignedUser, opt => opt.MapFrom(src => src.AssignedUser));
             CreateMap<Task, TaskResponse>();
+            CreateMap<User, UserResponse>();
         }
     }
 }

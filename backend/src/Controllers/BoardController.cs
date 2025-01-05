@@ -35,5 +35,18 @@ namespace backend.src.Controllers
                 Detail = boards
             });
         }
+
+        // add user to board
+        [HttpPut("assignUser")]
+        public async Task<IActionResult> AssignUserToBoard([FromBody] AssignUserRequest request)
+        {
+            BoardResponse response = await _boardService.AssignUserToBoard(request);
+            return Ok(new ApiResponse<BoardResponse>
+            {
+                Result = "success",
+                Detail = response
+            });
+
+        }
     }
 }

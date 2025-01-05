@@ -1,4 +1,5 @@
 using backend.Models;
+using backend.src.DTOs;
 using backend.src.Models;
 using backend.src.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -45,21 +46,7 @@ namespace backend.src.Controllers
         public async Task<IActionResult> GetUserById(int id)
         {
             var user = await _userService.GetUserByIdAsync(id);
-
-            if (user == null)
-            {
-                return NotFound(new ApiResponse<ErrorResponse>
-                {
-                    Result = "error",
-                    Detail = new ErrorResponse
-                    {
-                        Message = "User not found",
-                        Code = "404"
-                    }
-                });
-            }
-
-            return Ok(new ApiResponse<User>
+            return Ok(new ApiResponse<UserResponse>
             {
                 Result = "success",
                 Detail = user
