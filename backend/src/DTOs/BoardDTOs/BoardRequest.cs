@@ -11,9 +11,6 @@ namespace backend.src.DTOs.BoardDTOs
         public string? Description { get; set; } 
         public required string Status { get; set; } 
         public string? Visibility { get; set; } 
-        public int CreatedByUserId { get; set; } 
-        public int? AssignedUserId { get; set; } 
-        public string? BackgroundColor { get; set; }
 
     }
 }

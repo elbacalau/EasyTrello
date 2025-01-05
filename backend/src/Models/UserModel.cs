@@ -1,4 +1,4 @@
-using backend.src.Models;
+using System.Text.Json.Serialization;
 using backend.src.Models.backend.src.Models;
 
 namespace backend.Models
@@ -17,6 +17,7 @@ namespace backend.Models
         public bool IsActive { get; set; }       
 
         // relationships
+        [JsonIgnore]
         public ICollection<Board> Boards { get; set; } = [];
     }
 }

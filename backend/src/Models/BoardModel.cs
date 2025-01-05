@@ -20,7 +20,7 @@ namespace backend.src.Models
             public string? BackgroundColor { get; set; }
             public DateTime? DeletedAt { get; set; }
 
-            public ICollection<Task>? Tasks { get; set; } = new List<Task>();
+            public ICollection<Task>? Tasks { get; set; } = [];
         }
     }
 
