@@ -4,10 +4,8 @@ using backend.Data;
 using backend.Models;
 using backend.src.DTOs.BoardDTOs;
 using backend.src.Interfaces;
-using backend.src.Models.backend.src.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
+using backend.src.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 namespace backend.src.Service
 {
@@ -64,7 +62,7 @@ namespace backend.src.Service
             return _mapper.Map<BoardRequest>(newBoard);
         }
 
-        public async Task DeleteBoard(int boardId)
+        public async System.Threading.Tasks.Task DeleteBoard(int boardId)
         {
             // found board
             Board board = await _context.Boards.FindAsync(boardId) ?? throw new ArgumentException("Board not found");
@@ -72,7 +70,7 @@ namespace backend.src.Service
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteBoards(int userId)
+        public async System.Threading.Tasks.Task DeleteBoards(int userId)
         {
             // found boards
             List<Board> boards = await _context.Boards
@@ -98,7 +96,7 @@ namespace backend.src.Service
                 .Include(b => b.AssignedUsers)
                 .ToList();
 
-            return Task.FromResult(_mapper.Map<List<BoardResponse>>(boards));
+            return System.Threading.Tasks.Task.FromResult(_mapper.Map<List<BoardResponse>>(boards));
         }
         
 

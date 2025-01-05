@@ -1,7 +1,5 @@
 using System.Text.Json.Serialization;
 using backend.Models;
-using backend.src.Models.backend.src.Models;
-
 namespace backend.src.Models
 {
     public class Task

@@ -1,7 +1,5 @@
-using System.Security.Cryptography.X509Certificates;
 using System.Text.Json.Serialization;
-using backend.src.Models.backend.src.Models;
-
+using backend.src.Models;
 namespace backend.Models
 {
     public class User

@@ -1,6 +1,5 @@
 using backend.Models;
 using backend.src.Models;
-using backend.src.Models.backend.src.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Data

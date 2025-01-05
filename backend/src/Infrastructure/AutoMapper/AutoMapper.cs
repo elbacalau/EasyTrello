@@ -3,7 +3,7 @@ using backend.Models;
 using backend.src.DTOs;
 using backend.src.DTOs.BoardDTOs;
 using backend.src.DTOs.TaskDTOs;
-using backend.src.Models.backend.src.Models;
+using backend.src.Models;
 
 namespace backend.src.Infrastructure.Mapper
 {
@@ -24,7 +24,7 @@ namespace backend.src.Infrastructure.Mapper
             // MAPS
             CreateMap<Board, BoardRequest>();
             CreateMap<Board, BoardResponse>().ForMember(dest => dest.AssignedUsers, opt => opt.MapFrom(src => src.AssignedUsers));
-            CreateMap<Task, TaskResponse>();
+            CreateMap<Models.Task, TaskResponse>();
             CreateMap<User, UserResponse>();
         }
     }
