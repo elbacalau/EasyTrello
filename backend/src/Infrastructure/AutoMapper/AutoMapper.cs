@@ -24,7 +24,14 @@ namespace backend.src.Infrastructure.Mapper
             // MAPS
             CreateMap<Board, BoardRequest>();
             CreateMap<Board, BoardResponse>()
-                .ForMember(dest => dest.AssignedUsers, opt => opt.MapFrom(src => src.BoardUsers.Select(bu => bu.User)));
+                .ForMember(dest => dest.AssignedUsers, opt => opt.MapFrom(src => src.BoardUsers.Select(bu => new UserResponse
+                {
+                    FirstName = bu.User.FirstName,
+                    LastName = bu.User.LastName,
+                    Email = bu.User.Email,
+                    PhoneNumber = bu.User.PhoneNumber!,
+                    Role = bu.Role.ToString()
+                })));
             CreateMap<TaskModel, TaskResponse>();
             CreateMap<User, UserResponse>();
         }

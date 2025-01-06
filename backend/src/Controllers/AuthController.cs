@@ -34,7 +34,7 @@ namespace backend.src.Controllers
                 FirstName = newUser.FirstName,
                 LastName = newUser.LastName,
                 Email = newUser.Email,
-                PhoneNumber = newUser.PhoneNumber!
+                PhoneNumber = newUser.PhoneNumber!,
             };
 
             return Ok(new ApiResponse<UserResponse>
