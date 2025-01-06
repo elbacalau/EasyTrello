@@ -41,8 +41,13 @@ namespace backend.src.Service
             return _mapper.Map<BoardResponse>(board);
         }
 
-        public async Task ChangeUserRole(int userId, int boardId, int targetUserId, BoardRole newRole)
+        public async Task ChangeUserRole(int userId, int boardId, int targetUserId, string newRole)
         {
+            if (!Enum.TryParse<BoardRole>(newRole, true, out var role) || !Enum.IsDefined(typeof(BoardRole), role))
+            {
+                throw new ArgumentException("Invalid role.");
+            }
+
             // verify the actual role from user
             BoardUser boardUser = await _context.BoardUsers.FirstOrDefaultAsync(bu => bu.BoardId == boardId && bu.UserId == userId) ?? throw new UnauthorizedAccessException("You are not assigned to this board.");
 
@@ -54,9 +59,8 @@ namespace backend.src.Service
             // change role for the tarjet user
             var tarjetBoardRole = await _context.BoardUsers.FirstOrDefaultAsync(bu => bu.UserId == targetUserId && bu.BoardId == boardId) ?? throw new ArgumentException("Target user is not assigned to this board.");
 
-            tarjetBoardRole.Role = newRole;
+            tarjetBoardRole.Role = role;
             await _context.SaveChangesAsync();
-
         }
 
         public async Task<BoardRequest> CreateBoard(BoardRequest board)

@@ -10,6 +10,6 @@ namespace backend.src.Interfaces
         Task DeleteBoard(int boardId);
         Task DeleteBoards(int userId);
         Task DeleteUserFromBoard(int userId, int boardId);
-        Task ChangeUserRole(int userId, int boardId, int targetUserId, BoardRole newRole);
+        Task ChangeUserRole(int userId, int boardId, int targetUserId, string newRole);
     }
 }

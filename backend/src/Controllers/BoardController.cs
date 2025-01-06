@@ -80,19 +80,18 @@ namespace backend.src.Controllers
 
         // change user Role
         [HttpPatch("{boardId}/user/{tarjetUserId}")]
-        public async Task<IActionResult> ChangeUserRole(int boardId, int tarjetUserId, [FromBody] BoardRole newRole)
+        public async Task<IActionResult> ChangeUserRole(int boardId, int tarjetUserId, [FromBody] AssignRoleRequest request)
         {
             // found user id from token
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new UnauthorizedAccessException("Usuario no autenticado"));
 
-            await _boardService.ChangeUserRole(userId, boardId, tarjetUserId, newRole);
+            await _boardService.ChangeUserRole(userId, boardId, tarjetUserId, request.NewRole.ToString());
             
             return Ok(new ApiResponse<string>
             {
                 Result = "success",
                 Detail = "Role actualizado correctamente."
             });
-
 
         }
     }
