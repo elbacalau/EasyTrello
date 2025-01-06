@@ -41,6 +41,24 @@ namespace backend.src.Service
             return _mapper.Map<BoardResponse>(board);
         }
 
+        public async Task ChangeUserRole(int userId, int boardId, int targetUserId, BoardRole newRole)
+        {
+            // verify the actual role from user
+            BoardUser boardUser = await _context.BoardUsers.FirstOrDefaultAsync(bu => bu.BoardId == boardId && bu.UserId == userId) ?? throw new UnauthorizedAccessException("You are not assigned to this board.");
+
+            if (boardUser.Role != BoardRole.Owner && boardUser.Role != BoardRole.Admin)
+            {
+                throw new UnauthorizedAccessException("Only Admin or Owner can change user roles.");
+            }
+
+            // change role for the tarjet user
+            var tarjetBoardRole = await _context.BoardUsers.FirstOrDefaultAsync(bu => bu.UserId == targetUserId && bu.BoardId == boardId) ?? throw new ArgumentException("Target user is not assigned to this board.");
+
+            tarjetBoardRole.Role = newRole;
+            await _context.SaveChangesAsync();
+
+        }
+
         public async Task<BoardRequest> CreateBoard(BoardRequest board)
         {
             // get user id
@@ -96,13 +114,22 @@ namespace backend.src.Service
                 .Where(b => b.CreatedByUserId == userId)
                 .ToListAsync();
 
-            if (!boards.Any())
+            if (boards.Count == 0)
             {
                 throw new ArgumentException("No boards found for the given user.");
             }
             _context.Boards.RemoveRange(boards);
             await _context.SaveChangesAsync();
 
+        }
+
+        public async Task DeleteUserFromBoard(int boardId, int userId)
+        {
+            // founbd user and board
+            BoardUser boardUser = await _context.BoardUsers.FirstOrDefaultAsync(bu => bu.BoardId == boardId && bu.UserId == userId) ?? throw new ArgumentException("User is not assigned to this board.");
+
+            _context.BoardUsers.Remove(boardUser);
+            await _context.SaveChangesAsync();
         }
 
         public Task<List<BoardResponse>> GetBoards(int userId)

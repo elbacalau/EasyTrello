@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using backend.Models;
 using backend.src.DTOs.BoardDTOs;
 using backend.src.Models;
 using backend.src.Service;
@@ -23,6 +25,7 @@ namespace backend.src.Controllers
             });
         }
 
+        // get boards from user id
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBoard(int id)
         {
@@ -62,8 +65,35 @@ namespace backend.src.Controllers
         public async Task<IActionResult> DeleteBoardsByUserId(int userId)
         {
             await _boardService.DeleteBoards(userId);
-            return NoContent(); 
+            return NoContent();
         }
 
+
+        // delete user from one board
+        [HttpDelete("{boardId}/user/{userId}")]
+        public async Task<IActionResult> DeleteUserFromBoard(int boardId, int userId)
+        {
+            await _boardService.DeleteUserFromBoard(boardId, userId);
+            return NoContent();
+        }
+
+
+        // change user Role
+        [HttpPatch("{boardId}/user/{tarjetUserId}")]
+        public async Task<IActionResult> ChangeUserRole(int boardId, int tarjetUserId, [FromBody] BoardRole newRole)
+        {
+            // found user id from token
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new UnauthorizedAccessException("Usuario no autenticado"));
+
+            await _boardService.ChangeUserRole(userId, boardId, tarjetUserId, newRole);
+            
+            return Ok(new ApiResponse<string>
+            {
+                Result = "success",
+                Detail = "Role actualizado correctamente."
+            });
+
+
+        }
     }
 }

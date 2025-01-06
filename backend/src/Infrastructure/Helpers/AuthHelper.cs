@@ -20,7 +20,6 @@ namespace backend.src.Infrastructure.Helpers
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Name, user.FirstName),
                 new(ClaimTypes.Email, user.Email)
-                // TODO: Add role claim
             };
             var expitarionTime = Environment.GetEnvironmentVariable("JWT_EXPIRATION_TIME");
             var expiration = string.IsNullOrEmpty(expitarionTime) ? 1 : int.Parse(expitarionTime);

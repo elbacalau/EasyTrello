@@ -1,3 +1,4 @@
+using backend.Models;
 using backend.src.DTOs.BoardDTOs;
 namespace backend.src.Interfaces
 {
@@ -8,5 +9,7 @@ namespace backend.src.Interfaces
         Task<BoardResponse> AssignUserToBoard(AssignUserRequest assignUserRequest);
         Task DeleteBoard(int boardId);
         Task DeleteBoards(int userId);
+        Task DeleteUserFromBoard(int userId, int boardId);
+        Task ChangeUserRole(int userId, int boardId, int targetUserId, BoardRole newRole);
     }
 }
