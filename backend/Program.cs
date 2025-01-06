@@ -8,6 +8,7 @@ using backend.src.Infrastructure.Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using backend.src.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -25,6 +26,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AuthHelper>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<BoardService>();
+builder.Services.AddScoped<RoleValidationAttribute>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

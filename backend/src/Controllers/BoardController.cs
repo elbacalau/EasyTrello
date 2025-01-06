@@ -1,6 +1,6 @@
 using System.Security.Claims;
-using backend.Models;
 using backend.src.DTOs.BoardDTOs;
+using backend.src.Middleware;
 using backend.src.Models;
 using backend.src.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -71,6 +71,7 @@ namespace backend.src.Controllers
 
         // delete user from one board
         [HttpDelete("{boardId}/user/{userId}")]
+        [ServiceFilter(typeof(RoleValidationAttribute))]
         public async Task<IActionResult> DeleteUserFromBoard(int boardId, int userId)
         {
             await _boardService.DeleteUserFromBoard(boardId, userId);
@@ -80,6 +81,7 @@ namespace backend.src.Controllers
 
         // change user Role
         [HttpPatch("{boardId}/user/{tarjetUserId}")]
+        [ServiceFilter(typeof(RoleValidationAttribute))]
         public async Task<IActionResult> ChangeUserRole(int boardId, int tarjetUserId, [FromBody] AssignRoleRequest request)
         {
             // found user id from token
