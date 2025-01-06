@@ -19,8 +19,7 @@ namespace backend.Models
         [JsonIgnore]
         public ICollection<Board> Boards { get; set; } = [];
         
-        [JsonIgnore]
-        public ICollection<Board> AssignedBoards {get; set; } = [];
+        public ICollection<BoardUser> BoardUsers { get; set; } = [];
 
     }
 }

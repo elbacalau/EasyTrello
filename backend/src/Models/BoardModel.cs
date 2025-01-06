@@ -16,11 +16,13 @@ namespace backend.src.Models
         public int CreatedByUserId { get; set; }
         public User CreatedByUser { get; set; } = null!;
         public int? AssignedUserId { get; set; }
-        public ICollection<User> AssignedUsers { get; set; } = [];
+
         public string? BackgroundColor { get; set; }
         public DateTime? DeletedAt { get; set; }
 
-        public ICollection<Task>? Tasks { get; set; } = [];
+        public ICollection<TaskModel>? Tasks { get; set; } = [];
+        public ICollection<BoardUser> BoardUsers { get; set; } = [];
+
     }
 }
 

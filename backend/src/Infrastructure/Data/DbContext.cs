@@ -8,31 +8,33 @@ namespace backend.Data
     {
         public required DbSet<User> Users { get; set; }
         public required DbSet<Board> Boards { get; set; }
-        public required DbSet<src.Models.Task> Tasks { get; set; }
+        public required DbSet<TaskModel> Tasks { get; set; }
+        public required DbSet<BoardUser> BoardUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // 1 -> n
+            // 1 -> n  -- Board -> User
             modelBuilder.Entity<Board>()
                 .HasOne(b => b.CreatedByUser)
                 .WithMany(u => u.Boards)
                 .HasForeignKey(b => b.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // n -> n  
-            modelBuilder.Entity<Board>()
-                .HasMany(b => b.AssignedUsers)
-                .WithMany(u => u.AssignedBoards)
-                .UsingEntity(j => j.ToTable("BoardUsers"));
+            // n -> n  -- Board & User
+            modelBuilder.Entity<BoardUser>()
+                .HasKey(bu => new { bu.BoardId, bu.UserId });
+
+            modelBuilder.Entity<BoardUser>()
+                .HasOne(bu => bu.Board)
+                .WithMany(b => b.BoardUsers)
+                .HasForeignKey(bu => bu.BoardId);
+
+            modelBuilder.Entity<BoardUser>()
+                .HasOne(bu => bu.User)
+                .WithMany(u => u.BoardUsers)
+                .HasForeignKey(bu => bu.UserId);
         }
-
     }
-
-
-
-
-
-
 }

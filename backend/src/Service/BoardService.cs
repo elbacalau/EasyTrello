@@ -21,12 +21,22 @@ namespace backend.src.Service
             Board board = _context.Boards.SingleOrDefault(b => b.Id == assignUserRequest.BoardId) ?? throw new ArgumentException("Board not found");
             User user = _context.Users.SingleOrDefault(u => u.Id == assignUserRequest.UserId) ?? throw new ArgumentException("User not found");
 
-            board.AssignedUsers.Add(user);
-            board.AssignedUserId = user.Id;
+            var existingAssignment = await _context.BoardUsers.FirstOrDefaultAsync(bu => bu.BoardId == board.Id && bu.UserId == user.Id);
 
-            _context.Boards.Update(board);
+            if (existingAssignment != null)
+            {
+                throw new ArgumentException("User is already assigned to this board.");
+            }
+
+            var boardUser = new BoardUser
+            {
+                BoardId = board.Id,
+                UserId = user.Id,
+                Role = BoardRole.User
+            };
+
+            _context.BoardUsers.Add(boardUser);
             await _context.SaveChangesAsync();
-
 
             return _mapper.Map<BoardResponse>(board);
         }
@@ -54,15 +64,24 @@ namespace backend.src.Service
             newBoard.BackgroundColor = "#FFFFFF";
             newBoard.CreatedAt = DateTime.UtcNow;
             newBoard.UpdatedAt = DateTime.UtcNow;
-            newBoard.AssignedUsers.Add(creatorUser);
 
             _context.Boards.Add(newBoard);
+            await _context.SaveChangesAsync();
+
+            var boardUser = new BoardUser
+            {
+                BoardId = newBoard.Id,
+                UserId = userId,
+                Role = BoardRole.Owner
+            };
+
+            _context.BoardUsers.Add(boardUser);
             await _context.SaveChangesAsync();
 
             return _mapper.Map<BoardRequest>(newBoard);
         }
 
-        public async System.Threading.Tasks.Task DeleteBoard(int boardId)
+        public async Task DeleteBoard(int boardId)
         {
             // found board
             Board board = await _context.Boards.FindAsync(boardId) ?? throw new ArgumentException("Board not found");
@@ -70,7 +89,7 @@ namespace backend.src.Service
             await _context.SaveChangesAsync();
         }
 
-        public async System.Threading.Tasks.Task DeleteBoards(int userId)
+        public async Task DeleteBoards(int userId)
         {
             // found boards
             List<Board> boards = await _context.Boards
@@ -80,9 +99,9 @@ namespace backend.src.Service
             if (!boards.Any())
             {
                 throw new ArgumentException("No boards found for the given user.");
-            }          
+            }
             _context.Boards.RemoveRange(boards);
-            await _context.SaveChangesAsync(); 
+            await _context.SaveChangesAsync();
 
         }
 
@@ -93,12 +112,13 @@ namespace backend.src.Service
 
             var boards = _context.Boards
                 .Where(b => b.CreatedByUserId == userId)
-                .Include(b => b.AssignedUsers)
+                .Include(b => b.BoardUsers)
+                .ThenInclude(bu => bu.User)
                 .ToList();
 
-            return System.Threading.Tasks.Task.FromResult(_mapper.Map<List<BoardResponse>>(boards));
+            return Task.FromResult(_mapper.Map<List<BoardResponse>>(boards));
         }
-        
+
 
 
     }
