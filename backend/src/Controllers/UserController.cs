@@ -1,5 +1,6 @@
 using backend.Models;
 using backend.src.DTOs;
+using backend.src.DTOs.UserDTOs;
 using backend.src.Models;
 using backend.src.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -50,6 +51,20 @@ namespace backend.src.Controllers
             {
                 Result = "success",
                 Detail = user
+            });
+        }
+
+
+        // endpoint to get all data from autenticated user
+        // will save on app context
+        [Authorize]
+        [HttpGet("userData")]
+        public async Task<IActionResult> GetUserData()
+        {
+            UserDataResponse userDataResponse = await _userService.GetUserData();
+            return Ok(new ApiResponse<UserDataResponse>{
+                Result = "success",
+                Detail = userDataResponse
             });
         }
     }
