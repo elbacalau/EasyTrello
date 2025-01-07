@@ -3,6 +3,7 @@ using backend.Models;
 using backend.src.DTOs;
 using backend.src.DTOs.BoardDTOs;
 using backend.src.DTOs.TaskDTOs;
+using backend.src.DTOs.UserDTOs;
 using backend.src.Models;
 
 namespace backend.src.Infrastructure.Mapper
@@ -19,6 +20,29 @@ namespace backend.src.Infrastructure.Mapper
                 .ForMember(dest => dest.CreatedByUserId, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+            CreateMap<User, UserDataResponse>()
+                .ForMember(dest => dest.Boards, opt => opt.MapFrom(src => src.BoardUsers.Select(bu => new BoardResponse
+                {
+                    Id = bu.Board.Id,
+                    Name = bu.Board.Name,
+                    Description = bu.Board.Description,
+                    Status = bu.Board.Status,
+                    Visibility = bu.Board.Visibility,
+                    CreatedAt = bu.Board.CreatedAt,
+                    UpdatedAt = bu.Board.UpdatedAt,
+                    BackgroundColor = bu.Board.BackgroundColor,
+                    AssignedUsers = bu.Board.BoardUsers.Select(bbu => new UserResponse
+                    {
+                        FirstName = bbu.User.FirstName,
+                        LastName = bbu.User.LastName,
+                        Email = bbu.User.Email,
+                        PhoneNumber = bbu.User.PhoneNumber!,
+                        Role = bbu.Role.ToString()
+                    }).ToList()
+                }).ToList()));
+
+
 
 
             // MAPS
