@@ -35,6 +35,25 @@ namespace backend.Data
                 .HasOne(bu => bu.User)
                 .WithMany(u => u.BoardUsers)
                 .HasForeignKey(bu => bu.UserId);
+
+
+            // 1 board -> n task
+            modelBuilder.Entity<TaskModel>()
+                .HasOne(t => t.Board)
+                .WithMany(b => b.Tasks)
+                .HasForeignKey(t => t.BoardId);
+
+            // 1 task -> n comments
+            modelBuilder.Entity<TaskComment>()
+                .HasOne(tc => tc.Task)
+                .WithMany(t => t.Comments)
+                .HasForeignKey(tc => tc.TaskId);
+
+            modelBuilder.Entity<TaskComment>()
+                .HasOne(tc => tc.User)
+                .WithMany()
+                .HasForeignKey(tc => tc.UserId);    
+
         }
     }
 }
