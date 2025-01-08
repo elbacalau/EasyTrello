@@ -69,16 +69,12 @@ namespace backend.src.Service
             var userId = int.Parse(_httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("Usuario no autenticado"));
 
             // get all boards from user to verify if the name doesn't exists
-            var boardsUser = _context.Boards.Where(b => b.AssignedUserId == userId);
-
-            foreach (Board b in boardsUser)
+            if (_context.Boards.Any(b => b.AssignedUserId == userId && b.Name == board.Name))
             {
-                if (b.Name == board.Name)
-                {
-                    throw new ArgumentException("El nombre del tablero ya existe");
-                }
+                throw new ArgumentException("El nombre del tablero ya existe");
             }
 
+            
             User creatorUser = await _context.Users.FindAsync(userId) ?? throw new ArgumentException("User not found");
 
             var newBoard = _mapper.Map<Board>(board);

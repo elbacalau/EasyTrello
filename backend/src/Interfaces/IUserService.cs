@@ -8,7 +8,6 @@ namespace backend.src.Interfaces
     {
         Task<User> CreateUserAsync(User user);
         Task<UserResponse> GetUserByIdAsync(int id);
-
         Task<UserDataResponse> GetUserData();
     }
 }
