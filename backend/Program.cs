@@ -27,6 +27,7 @@ builder.Services.AddScoped<AuthHelper>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<BoardService>();
 builder.Services.AddScoped<RoleValidationAttribute>();
+builder.Services.AddScoped<TaskService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

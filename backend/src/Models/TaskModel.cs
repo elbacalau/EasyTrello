@@ -28,8 +28,8 @@ namespace backend.src.Models
         public User? AssignedUser { get; set; }
 
         // New fields
-        public List<string> Labels { get; set; } = new List<string>();
-        public List<TaskComment> Comments { get; set; } = new List<TaskComment>();
+        public List<string> Labels { get; set; } = [];
+        public List<TaskComment> Comments { get; set; } = [];
     }
 
     public enum TaskStatus

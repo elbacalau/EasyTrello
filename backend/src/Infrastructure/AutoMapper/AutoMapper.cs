@@ -42,9 +42,6 @@ namespace backend.src.Infrastructure.Mapper
                     }).ToList()
                 }).ToList()));
 
-
-
-
             // MAPS
             CreateMap<Board, BoardRequest>();
             CreateMap<Board, BoardResponse>()
@@ -56,8 +53,33 @@ namespace backend.src.Infrastructure.Mapper
                     PhoneNumber = bu.User.PhoneNumber!,
                     Role = bu.Role.ToString()
                 })));
-            CreateMap<TaskModel, TaskResponse>();
+
             CreateMap<User, UserResponse>();
+
+            // MAPS Task
+            CreateMap<TaskModel, TaskResponse>()
+                .ForMember(dest => dest.BoardName, opt => opt.MapFrom(src => src.Board!.Name))
+                .ForMember(dest => dest.AssignedUserName, opt => opt.MapFrom(src => $"{src.AssignedUser!.FirstName} {src.AssignedUser.LastName}"))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
+                .ForMember(dest => dest.Labels, opt => opt.MapFrom(src => src.Labels))
+                .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments.Select(c => new TaskCommentResponse
+                {
+                    Id = c.Id,
+                    Comment = c.Comment,
+                    CreatedAt = c.CreatedAt,
+                    UserId = c.UserId,
+                    UserName = $"{c.User.FirstName} {c.User.LastName}"
+                }).ToList()));
+
+
+            CreateMap<TaskRequest, TaskModel>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Enum.Parse<Models.TaskStatus>(src.Status, true)))
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => Enum.Parse<TaskPriority>(src.Priority, true)));
+
+
+
         }
     }
 }
