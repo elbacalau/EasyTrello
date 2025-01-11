@@ -13,5 +13,7 @@ namespace backend.src.Interfaces
         Task<List<TaskResponse>> FindTask([FromBody] FindTaskRequest request);
         Task<TaskResponse> CreateTask([FromBody] TaskRequest taskModel);
         Task DeleteTasks(int boardId, int? taskId);
+        Task<TaskResponse> AssignUserToTask(int taskId, [FromBody] AssignUserRequest request, int boardId);
+        Task<TaskResponse> CompleteTask(int taskId, [FromBody] CompleteTaskRequest request, int boardId);
     }
 }

@@ -13,7 +13,7 @@ namespace backend.src.Controllers
     {   
         private readonly TaskService _taskService = task;
 
-
+        // find a task
         [HttpPost("find")]
         public async Task<IActionResult> FindTask([FromBody] FindTaskRequest request)
         {
@@ -38,12 +38,35 @@ namespace backend.src.Controllers
         }
 
 
-
+        // delete a task from board or all task from the board
         [HttpDelete("{taskId}")]
         public async Task<IActionResult> DeleteTasks(int boardId, int? taskId)
         {
             await _taskService.DeleteTasks(boardId, taskId);
             return NoContent();
+        }
+
+
+        // assign user to task
+        [HttpPut("{taskId}/assignUser")]
+        public async Task<IActionResult> AssignUserToTask(int taskId, [FromBody] AssignUserRequest request, int boardId)
+        {
+            TaskResponse response = await _taskService.AssignUserToTask(taskId, request, boardId);
+            return Ok(new ApiResponse<TaskResponse>{
+                Result = "success",
+                Detail = response
+            });
+        }
+
+
+        [HttpPatch("{taskId}/complete")]
+        public async Task<IActionResult> CompleteTask(int taskId, [FromBody] CompleteTaskRequest request, int boardId)
+        {
+            TaskResponse taskResponse = await _taskService.CompleteTask(taskId, request, boardId);
+            return Ok(new ApiResponse<TaskResponse>{
+                Result = "success",
+                Detail = taskResponse
+            });
         }
 
     }

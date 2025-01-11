@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using backend.Data;
+using backend.Models;
 using backend.src.DTOs.TaskDTOs;
 using backend.src.Interfaces;
 using backend.src.Models;
@@ -18,6 +19,33 @@ namespace backend.src.Service
         private readonly AppDbContext _context = context;
         private readonly IMapper _mapper = mapper;
 
+        public async Task<TaskResponse> AssignUserToTask(int taskId, [FromBody] AssignUserRequest request, int boardId)
+        {
+            // find task
+            TaskModel task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.BoardId == boardId) ?? throw new ArgumentException("Task not found in the specified board");
+
+            // found new user to assign task
+            User newUser = await _context.Users.FindAsync(request.UserId) ?? throw new ArgumentException("User not found"); ;
+
+            task.AssignedUser = newUser;
+            task.AssignedUserId = request.UserId;
+
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<TaskResponse>(task);
+        }
+
+        public async Task<TaskResponse> CompleteTask(int taskId, [FromBody] CompleteTaskRequest request, int boardId)
+        {
+            // find task
+            TaskModel task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.BoardId == boardId) ?? throw new ArgumentException("Task not found in the specified board");
+
+            task.Completed = request.Complete;
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<TaskResponse>(task);
+        }
+
         public async Task<TaskResponse> CreateTask([FromBody] TaskRequest request)
         {
             // verify the boardId
@@ -27,7 +55,7 @@ namespace backend.src.Service
             bool taskExists = await _context.Tasks.AnyAsync(t => t.BoardId == request.BoardId && t.Name == request.Name);
             if (taskExists) throw new ArgumentException("Cannot repeat the name");
 
-            
+
 
             TaskModel newTask = _mapper.Map<TaskModel>(request);
 
@@ -46,7 +74,7 @@ namespace backend.src.Service
                 _context.Tasks.RemoveRange(boardTask);
             }
 
-            TaskModel removeTask  = boardTask.FirstOrDefault(t => t.Id == taskId)!;
+            TaskModel removeTask = boardTask.FirstOrDefault(t => t.Id == taskId)!;
 
             _context.Tasks.Remove(removeTask);
             await _context.SaveChangesAsync();
@@ -54,12 +82,12 @@ namespace backend.src.Service
 
         public async Task<List<TaskResponse>> FindTask([FromBody] FindTaskRequest request)
         {
-            
+
             List<TaskModel> tasks = await _context.Tasks.Where(t => t.BoardId == request.BoardId).ToListAsync();
             if (request.TaskId != null)
             {
                 return _mapper.Map<List<TaskResponse>>(tasks.Where(t => t.Id == request.TaskId).ToList());
-            } 
+            }
 
             return _mapper.Map<List<TaskResponse>>(tasks);
         }
