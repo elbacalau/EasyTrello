@@ -16,6 +16,11 @@ namespace backend.src.Service
             // find task
             TaskModel task = await _context.Tasks.FindAsync(taskId) ?? throw new ArgumentException("Task not found");
 
+            if (task.Comments.Count == 0)
+            {
+                task.Comments = [];
+            }
+
             task.Comments.Add(comment);
 
             await _context.SaveChangesAsync();
