@@ -89,6 +89,15 @@ namespace backend.src.Infrastructure.Mapper
 
             CreateMap<TaskComment, TaskCommentResponse>()
             .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => $"{src.User.FirstName} {src.User.LastName}"));
+
+
+            // map TaskModel to TaskResponse
+            CreateMap<TaskModel, TaskResponse>()
+                .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments));
+
+            // map TaskComment to TaskCommentResponse
+            CreateMap<TaskComment, TaskCommentResponse>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName + " " + src.User.LastName));
         }
     }
 }

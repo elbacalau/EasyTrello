@@ -83,7 +83,11 @@ namespace backend.src.Service
         public async Task<List<TaskResponse>> FindTask([FromBody] FindTaskRequest request)
         {
 
-            List<TaskModel> tasks = await _context.Tasks.Where(t => t.BoardId == request.BoardId).ToListAsync();
+            List<TaskModel> tasks = await _context.Tasks
+                .Include(t => t.Comments)
+                    .ThenInclude(c => c.User)
+                .Where(t => t.BoardId == request.BoardId)
+                .ToListAsync();
             if (request.TaskId != null)
             {
                 return _mapper.Map<List<TaskResponse>>(tasks.Where(t => t.Id == request.TaskId).ToList());
