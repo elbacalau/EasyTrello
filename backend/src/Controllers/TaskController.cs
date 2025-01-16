@@ -49,7 +49,7 @@ namespace backend.src.Controllers
 
         // assign user to task
         [HttpPut("{taskId}/assignUser")]
-        public async Task<IActionResult> AssignUserToTask(int taskId, [FromBody] AssignUserRequest request, int boardId)
+        public async Task<IActionResult> AssignUserToTask(int taskId, [FromBody] TaskAssignUserRequest request, int boardId)
         {
             TaskResponse response = await _taskService.AssignUserToTask(taskId, request, boardId);
             return Ok(new ApiResponse<TaskResponse>{
@@ -68,6 +68,8 @@ namespace backend.src.Controllers
                 Detail = taskResponse
             });
         }
+
+        
 
     }
 }

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace backend.src.DTOs.TaskDTOs
 {
-    public class AssignUserRequest
+    public class TaskAssignUserRequest
     {
         public required int UserId { get; set; }
     }

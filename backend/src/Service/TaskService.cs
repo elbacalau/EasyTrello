@@ -19,7 +19,7 @@ namespace backend.src.Service
         private readonly AppDbContext _context = context;
         private readonly IMapper _mapper = mapper;
 
-        public async Task<TaskResponse> AssignUserToTask(int taskId, [FromBody] AssignUserRequest request, int boardId)
+        public async Task<TaskResponse> AssignUserToTask(int taskId, [FromBody] TaskAssignUserRequest request, int boardId)
         {
             // find task
             TaskModel task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.BoardId == boardId) ?? throw new ArgumentException("Task not found in the specified board");
