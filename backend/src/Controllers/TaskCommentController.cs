@@ -26,6 +26,13 @@ namespace backend.src.Controllers
             });
         }
 
+        [HttpDelete("{taskId}")]
+        public async Task<IActionResult> DeleteCommentAsync(int taskId, [FromBody] DeleteCommentRequest request)
+        {
+            await _taskCommentService.DeleteCommentAsync(taskId, request);
+            return NoContent();
+        }
+
 
     }
 }

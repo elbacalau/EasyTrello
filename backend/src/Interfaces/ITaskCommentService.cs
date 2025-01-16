@@ -1,5 +1,6 @@
 using backend.src.DTOs.TaskCommentDTOs;
 using backend.src.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace backend.src.Interfaces
 {
@@ -9,6 +10,6 @@ namespace backend.src.Interfaces
         Task<TaskComment?> GetCommentByIdAsync(int id);
         Task<IEnumerable<TaskComment>> GetCommentsByTaskIdAsync(int taskId);
         Task<TaskComment> UpdateCommentAsync(int id, string updatedText);
-        Task<bool> DeleteCommentAsync(int id);
+        Task DeleteCommentAsync(int id, [FromBody] DeleteCommentRequest request);
     }
 }

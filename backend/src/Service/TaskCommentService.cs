@@ -3,6 +3,7 @@ using AutoMapper;
 using backend.Data;
 using backend.Models;
 using backend.src.DTOs.TaskCommentDTOs;
+using backend.src.DTOs.TaskDTOs;
 using backend.src.Infrastructure.Helpers;
 using backend.src.Interfaces;
 using backend.src.Models;
@@ -24,7 +25,7 @@ namespace backend.src.Service
                 .FirstOrDefaultAsync(t => t.Id == taskId)
                 ?? throw new ArgumentException("Task not found");
 
-            task.Comments ??= new List<TaskComment>();
+            task.Comments ??= [];
 
 
             int userId = _functions.GetUserId();
@@ -55,9 +56,21 @@ namespace backend.src.Service
         }
 
 
-        public Task<bool> DeleteCommentAsync(int id)
+        public async Task DeleteCommentAsync(int taskId, DeleteCommentRequest request)
         {
-            throw new NotImplementedException();
+            TaskModel task = await _context.Tasks
+                .FirstOrDefaultAsync(t => t.Id == taskId)
+                ?? throw new ArgumentException("Task not found");
+
+            if (request.CommentId == null)
+            {
+                // delete all comments
+                _context.TaskComments.RemoveRange(task.Comments);
+            }
+
+            TaskComment comment = task.Comments.FirstOrDefault(c => c.Id == request.CommentId) ?? throw new ArgumentException("Comment not found");
+            _context.TaskComments.Remove(comment);
+
         }
 
         public Task<TaskComment?> GetCommentByIdAsync(int id)
