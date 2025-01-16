@@ -2,6 +2,7 @@ using AutoMapper;
 using backend.Models;
 using backend.src.DTOs;
 using backend.src.DTOs.BoardDTOs;
+using backend.src.DTOs.TaskCommentDTOs;
 using backend.src.DTOs.TaskDTOs;
 using backend.src.DTOs.UserDTOs;
 using backend.src.Models;
@@ -80,6 +81,14 @@ namespace backend.src.Infrastructure.Mapper
 
 
 
+            // TASK COMMENTS
+            CreateMap<TaskCommentRequest, TaskComment>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.TaskId, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.Ignore());
+
+            CreateMap<TaskComment, TaskCommentResponse>()
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => $"{src.User.FirstName} {src.User.LastName}"));
         }
     }
 }

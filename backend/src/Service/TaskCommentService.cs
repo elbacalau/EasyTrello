@@ -1,33 +1,59 @@
 using System.Runtime.InteropServices.Marshalling;
 using AutoMapper;
 using backend.Data;
+using backend.Models;
+using backend.src.DTOs.TaskCommentDTOs;
+using backend.src.Infrastructure.Helpers;
 using backend.src.Interfaces;
 using backend.src.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.src.Service
 {
-    public class TaskCommentService(AppDbContext context, IMapper mapper) : ITaskCommentService
+    public class TaskCommentService(AppDbContext context, IMapper mapper, Functions functions) : ITaskCommentService
     {
         private readonly AppDbContext _context = context;
         private readonly IMapper _mapper = mapper;
-        
-        public async Task<TaskComment> CreateCommentAsync(TaskComment comment, int taskId)
-        {
-            // find task
-            TaskModel task = await _context.Tasks.FindAsync(taskId) ?? throw new ArgumentException("Task not found");
+        private readonly Functions _functions = functions;
 
-            if (task.Comments.Count == 0)
+        public async Task<TaskCommentResponse> CreateCommentAsync(TaskCommentRequest comment, int taskId)
+        {
+
+            TaskModel task = await _context.Tasks
+                .Include(t => t.Comments)
+                .FirstOrDefaultAsync(t => t.Id == taskId)
+                ?? throw new ArgumentException("Task not found");
+
+            task.Comments ??= new List<TaskComment>();
+
+
+            int userId = _functions.GetUserId();
+
+
+            BoardUser boardRole = await _context.BoardUsers
+                .FirstOrDefaultAsync(bu => bu.UserId == userId && bu.BoardId == task.BoardId)
+                ?? throw new ArgumentException("User not found or not part of the board");
+
+            if (boardRole.Role == BoardRole.Viewer)
             {
-                task.Comments = [];
+                throw new UnauthorizedAccessException("User does not have permission to add comments to this task");
             }
 
-            task.Comments.Add(comment);
+
+            var newComment = _mapper.Map<TaskComment>(comment);
+            User user = await _context.Users.FindAsync(userId) ?? throw new ArgumentException("User not found");
+            newComment.TaskId = taskId;
+            newComment.UserId = userId;
+            newComment.User = user;
+
+            task.Comments.Add(newComment);
 
             await _context.SaveChangesAsync();
 
-            return comment;
 
+            return _mapper.Map<TaskCommentResponse>(newComment);
         }
+
 
         public Task<bool> DeleteCommentAsync(int id)
         {

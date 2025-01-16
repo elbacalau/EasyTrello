@@ -10,6 +10,7 @@ namespace backend.Data
         public required DbSet<Board> Boards { get; set; }
         public required DbSet<TaskModel> Tasks { get; set; }
         public required DbSet<BoardUser> BoardUsers { get; set; }
+        public required DbSet<TaskComment> TaskComments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
