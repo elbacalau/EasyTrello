@@ -7,6 +7,7 @@ using backend.src.DTOs.TaskDTOs;
 using backend.src.Infrastructure.Helpers;
 using backend.src.Interfaces;
 using backend.src.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.src.Service
@@ -50,13 +51,11 @@ namespace backend.src.Service
             task.Comments.Add(newComment);
 
             await _context.SaveChangesAsync();
-
-
             return _mapper.Map<TaskCommentResponse>(newComment);
         }
 
 
-        public async Task DeleteCommentAsync(int taskId, DeleteCommentRequest request)
+        public async Task DeleteCommentAsync(int taskId, CommentRequest request)
         {
             TaskModel task = await _context.Tasks
                 .FirstOrDefaultAsync(t => t.Id == taskId)
@@ -73,14 +72,25 @@ namespace backend.src.Service
 
         }
 
-        public Task<TaskComment?> GetCommentByIdAsync(int id)
+        public async Task<TaskCommentResponse> GetCommentByIdAsync(int taskId, [FromBody] CommentRequest request)
         {
-            throw new NotImplementedException();
+            TaskModel task = await _context.Tasks
+                .FirstOrDefaultAsync(t => t.Id == taskId)
+                ?? throw new ArgumentException("Task not found");
+
+            TaskComment comment = task.Comments.FirstOrDefault(c => c.Id == request.CommentId) ?? throw new ArgumentException("Comment not found");
+
+            return _mapper.Map<TaskCommentResponse>(comment);
         }
 
-        public Task<IEnumerable<TaskComment>> GetCommentsByTaskIdAsync(int taskId)
+        public async Task<IEnumerable<TaskCommentResponse>> GetCommentsByTaskIdAsync(int taskId)
         {
-            throw new NotImplementedException();
+            TaskModel task = await _context.Tasks
+                .Include(t => t.Comments)
+                .FirstOrDefaultAsync(t => t.Id == taskId)
+                ?? throw new ArgumentException("Task not found");
+
+            return _mapper.Map<IEnumerable<TaskCommentResponse>>(task.Comments);
         }
 
         public Task<TaskComment> UpdateCommentAsync(int id, string updatedText)

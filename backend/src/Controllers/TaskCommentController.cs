@@ -27,12 +27,33 @@ namespace backend.src.Controllers
         }
 
         [HttpDelete("{taskId}")]
-        public async Task<IActionResult> DeleteCommentAsync(int taskId, [FromBody] DeleteCommentRequest request)
+        public async Task<IActionResult> DeleteCommentAsync(int taskId, [FromBody] CommentRequest request)
         {
             await _taskCommentService.DeleteCommentAsync(taskId, request);
             return NoContent();
         }
 
 
+        [HttpPost("{taskId}/find")]
+        public async Task<IActionResult> GetCommentById(int taskId, [FromBody] CommentRequest request)
+        {
+            TaskCommentResponse comment = await _taskCommentService.GetCommentByIdAsync(taskId, request);
+
+            return Ok(new ApiResponse<TaskCommentResponse>{
+                Detail = comment,
+                Result = "success"
+            });
+        }
+
+        [HttpGet("{taskId}")]
+        public async Task<IActionResult> GetCommentsByTaskId(int taskId)
+        {
+            IEnumerable<TaskCommentResponse> comments = await _taskCommentService.GetCommentsByTaskIdAsync(taskId);
+
+            return Ok(new ApiResponse<IEnumerable<TaskCommentResponse>>{
+                Detail = comments,
+                Result = "success"
+            });
+        }
     }
 }
