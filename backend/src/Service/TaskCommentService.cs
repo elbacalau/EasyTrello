@@ -72,11 +72,14 @@ namespace backend.src.Service
 
         }
 
-        public async Task<TaskCommentResponse> GetCommentByIdAsync(int taskId, [FromBody] CommentRequest request)
+        public async Task<TaskCommentResponse> GetCommentByIdAsync(int taskId,CommentRequest request)
         {
             TaskModel task = await _context.Tasks
+                .Include(t => t.Comments)
                 .FirstOrDefaultAsync(t => t.Id == taskId)
                 ?? throw new ArgumentException("Task not found");
+            
+            
 
             TaskComment comment = task.Comments.FirstOrDefault(c => c.Id == request.CommentId) ?? throw new ArgumentException("Comment not found");
 
@@ -93,9 +96,18 @@ namespace backend.src.Service
             return _mapper.Map<IEnumerable<TaskCommentResponse>>(task.Comments);
         }
 
-        public Task<TaskComment> UpdateCommentAsync(int id, string updatedText)
-        {
-            throw new NotImplementedException();
+        public async Task<TaskCommentResponse> UpdateCommentAsync(int id, [FromBody] CommentRequest request)
+        {   
+            TaskComment comment = await _context.TaskComments.FindAsync(id) ?? throw new ArgumentException("Comment not found");
+
+            comment.Comment = request.NewComment ?? comment.Comment;
+
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<TaskCommentResponse>(comment);
         }
+
+        
+        
     }
 }

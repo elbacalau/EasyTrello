@@ -55,5 +55,17 @@ namespace backend.src.Controllers
                 Result = "success"
             });
         }
+
+
+        [HttpPut("{taskId}")]
+        public async Task<IActionResult> UpdateComment(int taskId, [FromBody] CommentRequest request)
+        {
+            TaskCommentResponse comment = await _taskCommentService.UpdateCommentAsync(taskId, request);
+
+            return Ok(new ApiResponse<TaskCommentResponse>{
+                Detail = comment,
+                Result = "success"
+            });
+        }
     }
 }
