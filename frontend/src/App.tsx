@@ -1,19 +1,33 @@
-import '@fontsource/inter/index.css';
-import '@fontsource/poppins/index.css';
-import { AppDispatch } from './store/store';
-import { useDispatch } from 'react-redux';
-import { useEffect } from 'react';
+import { useDispatch } from "react-redux";
+import AppRouter from "./router";
+import { useEffect } from "react";
+import { getUserData } from "./api/services/auth/authService";
+import { loginSuccess } from "./features/auth/authSlice";
 
 const App = () => {
+  const dispatch = useDispatch();
 
-  const dispatch: AppDispatch = useDispatch()
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const user = await getUserData();
+          dispatch(loginSuccess( { user, token } ));
+        } catch (error) {
+          console.log(error);
+          localStorage.removeItem("token");
+          // dispatch(logout());
+        }
+      } else {
+        // dispatch(logout());
+      }
+    };
 
- 
-  return (
-    <div className='p-32'>
-      <h1 className='font-poppins text-3xl'>Hola</h1>
-    </div>
-  )
-}
+    initializeAuth();
+  }, [dispatch]);
 
-export default App
+  return <AppRouter />;
+};
+
+export default App;

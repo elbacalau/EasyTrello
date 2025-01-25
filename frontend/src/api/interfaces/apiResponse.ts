@@ -1,7 +1,6 @@
-export interface APIResponse {
+export interface APIResponse<T> {
   result: string;
-  detail: Detail;
+  detail: T;
 }
 
-export interface Detail {
-}
+
