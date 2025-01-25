@@ -27,9 +27,9 @@ namespace backend.src.Controllers
         }
 
         [HttpDelete("{taskId}")]
-        public async Task<IActionResult> DeleteCommentAsync(int taskId, [FromBody] CommentRequest request)
+        public async Task<IActionResult> DeleteCommentAsync(int taskId)
         {
-            await _taskCommentService.DeleteCommentAsync(taskId, request);
+            await _taskCommentService.DeleteCommentAsync(taskId);
             return NoContent();
         }
 
@@ -57,7 +57,7 @@ namespace backend.src.Controllers
         }
 
 
-        [HttpPut("{taskId}")]
+        [HttpPut("{taskId}/updateComment")]
         public async Task<IActionResult> UpdateComment(int taskId, [FromBody] CommentRequest request)
         {
             TaskCommentResponse comment = await _taskCommentService.UpdateCommentAsync(taskId, request);

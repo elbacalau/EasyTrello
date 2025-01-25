@@ -9,7 +9,7 @@ namespace backend.src.Interfaces
         Task<TaskCommentResponse> CreateCommentAsync(TaskCommentRequest comment, int taskId);
         Task<TaskCommentResponse> GetCommentByIdAsync(int id,  CommentRequest request);
         Task<IEnumerable<TaskCommentResponse>> GetCommentsByTaskIdAsync(int taskId);
-        Task<TaskCommentResponse> UpdateCommentAsync(int id, CommentRequest request);
-        Task DeleteCommentAsync(int id,  CommentRequest request);
+        Task<TaskCommentResponse> UpdateCommentAsync(int taskId, CommentRequest request);
+        Task DeleteCommentAsync(int id);
     }
 }
