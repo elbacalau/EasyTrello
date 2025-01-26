@@ -30,3 +30,8 @@ export interface AssignedUser {
   phoneNumber?: string;
   role?:        string;
 }
+
+export interface LayoutProps { 
+  user: UserData | null;
+}
+
