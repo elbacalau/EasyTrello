@@ -2,17 +2,21 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { validationSchema } from "../utils/validation";
 import { LoginRequest } from "../api/interfaces/loginRequest";
-import { login } from "../api/services/auth/authService";
+import { getUserData, login } from "../api/services/auth/authService";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { loginSuccess } from "../features/auth/authSlice";
 
 
 
 const Login = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(validationSchema),
@@ -24,13 +28,29 @@ const Login = () => {
        
       const _token = await login(data.email, data.password);
       if (_token) {
-        
         localStorage.setItem("token", _token);
+
+        
+        // si el login es exitoso actualizamos el redux con el userData
+        const userData = await getUserData();
+        
+        dispatch(
+          loginSuccess({
+            token: _token,
+            user: userData,
+          })
+        );
+
         navigate("/dashboard");
       }
 
     } catch (error: any) {
       console.error("Error fetching data:", error.message);
+      setError("email", {
+        type: "manual",
+        message: "Correo o contraseña incorrectos",
+      });
+      
     }
 
   };
@@ -62,7 +82,7 @@ const Login = () => {
               {...register("email")}
             />
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+              <p className="text-red-500 text-sm mt-3 font-bold">{errors.email.message}</p>
             )}
           </div>
 
@@ -79,7 +99,7 @@ const Login = () => {
               {...register("password")}
             />
             {errors.password && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-red-500 text-sm mt-3 font-bold">
                 {errors.password.message}
               </p>
             )}
