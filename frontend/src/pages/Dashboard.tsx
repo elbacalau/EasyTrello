@@ -7,7 +7,7 @@ export const Dashboard = ({ user }: LayoutProps) => {
 
   return (
     <div>
-      {!hasBoards ? (
+      {hasBoards ? (
         <div>
           <h2>Boards</h2>
           <ul>
@@ -17,14 +17,7 @@ export const Dashboard = ({ user }: LayoutProps) => {
           </ul>
         </div>
       ) : (
-        <EmptyState
-          title={"Bienvenido a tu dashboard"}
-          description={"Crea tu primer tablero para empezar a organizar tus tareas."}
-          actionLabel={"Crear tablero"}
-          onAction={function (): void {
-            alert("Crear tablero");
-          }}
-        />
+        <EmptyState/>
       )}
     </div>
   );
