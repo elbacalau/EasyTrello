@@ -25,13 +25,13 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/20/solid";
 import { LayoutProps } from "../api/interfaces/userData";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: FolderIcon, current: true },
-  { name: "Team", href: "/team", icon: UsersIcon, current: false },
-  { name: "Calendar", href: "/calendar", icon: CalendarIcon, current: false },
-  { name: "Projects", href: "/projects", icon: FolderIcon, current: false },
+  { name: "Dashboard", href: "/dashboard", icon: FolderIcon },
+  { name: "Team", href: "/team", icon: UsersIcon },
+  { name: "Calendar", href: "/calendar", icon: CalendarIcon },
+  { name: "Projects", href: "/projects", icon: FolderIcon },
 ];
 const teams = [
   { id: 1, name: "Heroicons", href: "#", initial: "H", current: false },
@@ -48,6 +48,7 @@ function classNames(...classes: string[]) {
 }
 
 export default function Layout({ user }: LayoutProps) {
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -104,30 +105,33 @@ export default function Layout({ user }: LayoutProps) {
                   <ul role="list" className="flex flex-1 flex-col gap-y-7">
                     <li>
                       <ul role="list" className="-mx-2 space-y-1">
-                        {navigation.map((item) => (
-                          <li key={item.name}>
-                            <Link
-                              to={item.href}
-                              className={classNames(
-                                item.current
-                                  ? "bg-gray-50 text-indigo-600"
-                                  : "text-gray-700 hover:bg-gray-50 hover:text-indigo-600",
-                                "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold"
-                              )}
-                            >
-                              <item.icon
-                                aria-hidden="true"
+                        {navigation.map((item) => {
+                          const isCurrent = location.pathname === item.href;
+                          return (
+                            <li key={item.name}>
+                              <Link
+                                to={item.href}
                                 className={classNames(
-                                  item.current
-                                    ? "text-indigo-600"
-                                    : "text-gray-400 group-hover:text-indigo-600",
-                                  "size-6 shrink-0"
+                                  isCurrent
+                                    ? "bg-gray-50 text-indigo-600"
+                                    : "text-gray-700 hover:bg-gray-50 hover:text-indigo-600",
+                                  "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold"
                                 )}
-                              />
-                              {item.name}
-                            </Link>
-                          </li>
-                        ))}
+                              >
+                                <item.icon
+                                  aria-hidden="true"
+                                  className={classNames(
+                                    isCurrent
+                                      ? "text-indigo-600"
+                                      : "text-gray-400 group-hover:text-indigo-600",
+                                    "size-6 shrink-0"
+                                  )}
+                                />
+                                {item.name}
+                              </Link>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </li>
                     <li>
@@ -197,30 +201,35 @@ export default function Layout({ user }: LayoutProps) {
               <ul role="list" className="flex flex-1 flex-col gap-y-7">
                 <li>
                   <ul role="list" className="-mx-2 space-y-1">
-                    {navigation.map((item) => (
-                      <li key={item.name}>
-                        <Link
-                          to={item.href}
-                          className={classNames(
-                            item.current
-                              ? "bg-gray-50 text-indigo-600"
-                              : "text-gray-700 hover:bg-gray-50 hover:text-indigo-600",
-                            "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold"
-                          )}
-                        >
-                          <item.icon
-                            aria-hidden="true"
+                    {navigation.map((item) => {
+                      
+                      const isCurrent = location.pathname === item.href;
+
+                      return (
+                        <li key={item.name}>
+                          <Link
+                            to={item.href}
                             className={classNames(
-                              item.current
-                                ? "text-indigo-600"
-                                : "text-gray-400 group-hover:text-indigo-600",
-                              "size-6 shrink-0"
+                              isCurrent
+                                ? "bg-gray-50 text-indigo-600"
+                                : "text-gray-700 hover:bg-gray-50 hover:text-indigo-600",
+                              "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold"
                             )}
-                          />
-                          {item.name}
-                        </Link>
-                      </li>
-                    ))}
+                          >
+                            <item.icon
+                              aria-hidden="true"
+                              className={classNames(
+                                isCurrent
+                                  ? "text-indigo-600"
+                                  : "text-gray-400 group-hover:text-indigo-600",
+                                "size-6 shrink-0"
+                              )}
+                            />
+                            {item.name}
+                          </Link>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </li>
                 <li>

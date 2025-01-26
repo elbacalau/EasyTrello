@@ -7,8 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../features/auth/authSlice";
 
-
-
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -23,37 +21,37 @@ const Login = () => {
   });
 
   const onSubmit = async (data: LoginRequest) => {
-    
     try {
-       
       const _token = await login(data.email, data.password);
       if (_token) {
         localStorage.setItem("token", _token);
 
-        
         // si el login es exitoso actualizamos el redux con el userData
         const userData = await getUserData();
-        
+
         dispatch(
           loginSuccess({
             token: _token,
             user: userData,
           })
-        );  
-        console.log("Dispatched: ", { token: _token, user: userData });
-        
+        );
         navigate("/dashboard");
       }
-
-    } catch (error: any) {
-      console.error("Error fetching data:", error.message);
-      setError("email", {
-        type: "manual",
-        message: "Correo o contraseña incorrectos",
-      });
-      
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error fetching data:", error.message);
+        setError("email", {
+          type: "manual",
+          message: "Correo o contraseña incorrectos",
+        });
+      } else {
+        console.error("Error desconocido:", error);
+        setError("email", {
+          type: "manual",
+          message: "Ha ocurrido un error inesperado.",
+        });
+      }
     }
-
   };
 
   return (
@@ -83,7 +81,9 @@ const Login = () => {
               {...register("email")}
             />
             {errors.email && (
-              <p className="text-red-500 text-sm mt-3 font-bold">{errors.email.message}</p>
+              <p className="text-red-500 text-sm mt-3 font-bold">
+                {errors.email.message}
+              </p>
             )}
           </div>
 
