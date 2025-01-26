@@ -13,14 +13,18 @@ const App = () => {
       if (token) {
         try {
           const user = await getUserData();
-          dispatch(loginSuccess( { user, token } ));
+          console.log("User app.tsx: ", user);
+
+          dispatch(
+            loginSuccess({
+              token,
+              user,
+            })
+          );
         } catch (error) {
           console.log(error);
           localStorage.removeItem("token");
-          // dispatch(logout());
         }
-      } else {
-        // dispatch(logout());
       }
     };
 

@@ -21,6 +21,7 @@ const authSlice = createSlice({
       state,
       action: PayloadAction<{ user: UserData; token: string }>
     ) => {
+      console.log("Login Success Reducer ejecutado con: ", action.payload);
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;

@@ -39,8 +39,9 @@ const Login = () => {
             token: _token,
             user: userData,
           })
-        );
-
+        );  
+        console.log("Dispatched: ", { token: _token, user: userData });
+        
         navigate("/dashboard");
       }
 

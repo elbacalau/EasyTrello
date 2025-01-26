@@ -25,13 +25,13 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/20/solid";
 import { LayoutProps } from "../api/interfaces/userData";
-import { Dashboard } from "../pages/Dashboard";
+import { Link, Outlet } from "react-router-dom";
 
 const navigation = [
-  { name: "Dashboard", href: "#", icon: FolderIcon, current: true },
-  { name: "Team", href: "#", icon: UsersIcon, current: false },
-  { name: "Calendar", href: "#", icon: CalendarIcon, current: false },
-  { name: "Projects", href: "#", icon: FolderIcon, current: false },
+  { name: "Dashboard", href: "/dashboard", icon: FolderIcon, current: true },
+  { name: "Team", href: "/team", icon: UsersIcon, current: false },
+  { name: "Calendar", href: "/calendar", icon: CalendarIcon, current: false },
+  { name: "Projects", href: "/projects", icon: FolderIcon, current: false },
 ];
 const teams = [
   { id: 1, name: "Heroicons", href: "#", initial: "H", current: false },
@@ -106,8 +106,8 @@ export default function Layout({ user }: LayoutProps) {
                       <ul role="list" className="-mx-2 space-y-1">
                         {navigation.map((item) => (
                           <li key={item.name}>
-                            <a
-                              href={item.href}
+                            <Link
+                              to={item.href}
                               className={classNames(
                                 item.current
                                   ? "bg-gray-50 text-indigo-600"
@@ -125,7 +125,7 @@ export default function Layout({ user }: LayoutProps) {
                                 )}
                               />
                               {item.name}
-                            </a>
+                            </Link>
                           </li>
                         ))}
                       </ul>
@@ -199,8 +199,8 @@ export default function Layout({ user }: LayoutProps) {
                   <ul role="list" className="-mx-2 space-y-1">
                     {navigation.map((item) => (
                       <li key={item.name}>
-                        <a
-                          href={item.href}
+                        <Link
+                          to={item.href}
                           className={classNames(
                             item.current
                               ? "bg-gray-50 text-indigo-600"
@@ -218,7 +218,7 @@ export default function Layout({ user }: LayoutProps) {
                             )}
                           />
                           {item.name}
-                        </a>
+                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -241,7 +241,6 @@ export default function Layout({ user }: LayoutProps) {
                               "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold"
                             )}
                           >
-                         
                             <span
                               className={classNames(
                                 "border-gray-200 text-gray-400 group-hover:border-indigo-600 group-hover:text-indigo-600",
@@ -251,7 +250,6 @@ export default function Layout({ user }: LayoutProps) {
                               {board.name?.charAt(0).toUpperCase()}
                             </span>
 
-                         
                             <span className="truncate">{board.name}</span>
                           </a>
                         </li>
@@ -370,9 +368,7 @@ export default function Layout({ user }: LayoutProps) {
 
           <main className="py-10">
             <div className="px-4 sm:px-6 lg:px-8">
-              {/* DASHBOARD */}
-
-              <Dashboard user={user} />
+              <Outlet />
             </div>
           </main>
         </div>
