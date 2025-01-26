@@ -4,3 +4,7 @@ export interface APIResponse<T> {
 }
 
 
+export interface ErrorResponse {
+  message: string;
+  code: string;
+}

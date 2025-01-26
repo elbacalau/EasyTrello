@@ -1,14 +1,13 @@
+import { APIResponse, ErrorResponse } from "../interfaces/apiResponse";
 import { baseUrl } from "../../utils/const";
 
 
-
 class ApiService {
-  
-  private static async request<T extends unknown>(
-    url: string,
+  private static async request<T>(
+    endpoint: string,
     method: string,
     body?: object
-  ): Promise<T> {
+  ): Promise<APIResponse<T>> {
     try {
       const token = localStorage.getItem("token");
       const options: RequestInit = {
@@ -19,56 +18,53 @@ class ApiService {
         },
         body: body ? JSON.stringify(body) : undefined,
       };
-      
-      const response = await fetch(`${baseUrl}${url}`, options);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
+      const url = `${baseUrl}${endpoint}`;
+      const response = await fetch(url, options);
+
+      
+      const data: APIResponse<T> = await response.json();
+
+      
+      if (!response.ok || data.result === "error") {
+        const errorDetail = data.detail as unknown as ErrorResponse;
+        throw new Error(errorDetail.message || "Unknown error occurred");
       }
 
-      const data: T = await response.json();
       return data;
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    } catch (error: any) {
+      console.error("Error fetching data:", error.message);
       throw error;
     }
   }
 
- 
-  public static async fetchData<T extends unknown>(
-    endpoint: string
-  ): Promise<T> {
-    return this.request<T>(`${endpoint}`, "GET");
+  public static async fetchData<T>(endpoint: string): Promise<APIResponse<T>> {
+    return this.request<T>(endpoint, "GET");
   }
 
-  
-  public static async createData<T extends unknown>(
+  public static async createData<T>(
     endpoint: string,
     body: object
-  ): Promise<T> {
-    return this.request<T>(`${endpoint}`, "POST", body);
+  ): Promise<APIResponse<T>> {
+    return this.request<T>(endpoint, "POST", body);
   }
 
- 
-  public static async updateData<T extends unknown>(
+  public static async updateData<T>(
     endpoint: string,
     body: object
-  ): Promise<T> {
-    return this.request<T>(`${endpoint}`, "PUT", body);
+  ): Promise<APIResponse<T>> {
+    return this.request<T>(endpoint, "PUT", body);
   }
 
-  
-  public static async deleteData<T extends unknown>(
-    endpoint: string
-  ): Promise<T> {
-    return this.request<T>(`${endpoint}`, "DELETE");
+  public static async deleteData<T>(endpoint: string): Promise<APIResponse<T>> {
+    return this.request<T>(endpoint, "DELETE");
   }
 
-  public static async patchData<T extends unknown>(
+  public static async patchData<T>(
     endpoint: string,
     body: object
-  ): Promise<T> {
-    return this.request<T>(`${endpoint}`, "PATCH", body);
+  ): Promise<APIResponse<T>> {
+    return this.request<T>(endpoint, "PATCH", body);
   }
 }
 

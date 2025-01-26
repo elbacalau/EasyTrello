@@ -1,10 +1,15 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { validationSchema } from "../utils/validation";
+import { LoginRequest } from "../api/interfaces/loginRequest";
+import { login } from "../api/services/auth/authService";
+import { useNavigate } from "react-router-dom";
 
 
 
 const Login = () => {
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -13,8 +18,21 @@ const Login = () => {
     resolver: yupResolver(validationSchema),
   });
 
-  const onSubmit = (data: any) => {
-    console.log("Datos enviados:", data);
+  const onSubmit = async (data: LoginRequest) => {
+    
+    try {
+       
+      const _token = await login(data.email, data.password);
+      if (_token) {
+        
+        localStorage.setItem("token", _token);
+        navigate("/dashboard");
+      }
+
+    } catch (error: any) {
+      console.error("Error fetching data:", error.message);
+    }
+
   };
 
   return (

@@ -1,14 +1,18 @@
-import { LoginRequest } from "../../interfaces/loginRequest";
 import { UserData } from "../../interfaces/userData";
-import ApiService from "../apiService";
+import ApiService from "../ApiService";
 
-export const login = async (request: LoginRequest) => {
-  const token = await ApiService.createData<LoginRequest>(
-    "/auth/login",
-    { email: request.email, password: request.password }
-  );
+export const login = async (email: string, password: string): Promise<string> => {
+  try {
+    const response = await ApiService.createData<string>(
+      "/auth/login",
+      { email, password }
+    );
 
-  return token;
+    return response.detail;
+  } catch (error: any) {
+    console.error("Error fetching data:", error.message);
+    throw error;
+  }
 }
 
 
@@ -19,3 +23,5 @@ export const getUserData = async () => {
 
   return userData;
 }
+
+
