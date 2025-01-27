@@ -76,6 +76,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+
+
 // authentication
 builder.Services.AddAuthentication(cfg =>
 {
@@ -109,18 +111,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// middlewares
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+
+// middlewares       
+app.UseHandleOptionsMiddleware();   
+app.UseCors();                       
+app.UseAuthentication();             
+app.UseAuthorization();             
+app.UseMiddleware<ExceptionHandlingMiddleware>(); 
 app.UseMiddleware<TokenValidationMiddleware>();
-
-// config middlewares
-app.UseHttpsRedirection();
-app.UseCors();
-app.UseAuthentication();
-app.UseAuthorization();
-
-
-app.MapControllers();
-
-
+app.MapControllers();                
 app.Run();
+
