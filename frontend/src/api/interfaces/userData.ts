@@ -12,13 +12,13 @@ export interface UserData {
 }
 
 export interface Board {
-  id?:              number;
-  name?:            string;
-  description?:     string;
-  status?:          string;
-  visibility?:      string;
-  createdAt?:       Date;
-  updatedAt?:       Date;
+  id:              number;
+  name:            string;
+  description:     string;
+  status:          string;
+  visibility:      string;
+  createdAt:       Date;
+  updatedAt:       Date;
   assignedUsers?:   AssignedUser[];
   backgroundColor?: string;
 }

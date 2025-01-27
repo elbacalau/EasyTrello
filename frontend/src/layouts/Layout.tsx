@@ -33,11 +33,9 @@ const navigation = [
   { name: "Calendar", href: "/calendar", icon: CalendarIcon },
   { name: "Projects", href: "/projects", icon: FolderIcon },
 ];
-const teams = [
-  { id: 1, name: "Heroicons", href: "#", initial: "H", current: false },
-  { id: 2, name: "Tailwind Labs", href: "#", initial: "T", current: false },
-  { id: 3, name: "Workcation", href: "#", initial: "W", current: false },
-];
+
+
+
 const userNavigation = [
   { name: "Your profile", href: "#" },
   { name: "Sign out", href: "#" },
@@ -136,36 +134,41 @@ export default function Layout({ user }: LayoutProps) {
                     </li>
                     <li>
                       <div className="text-xs/6 font-semibold text-gray-400">
-                        Your teams
+                        Active projects
                       </div>
 
-                      <ul role="list" className="-mx-2 mt-2 space-y-1">
-                        {teams.map((team) => (
-                          <li key={team.name}>
-                            <a
-                              href={team.href}
-                              className={classNames(
-                                team.current
-                                  ? "bg-gray-50 text-indigo-600"
-                                  : "text-gray-700 hover:bg-gray-50 hover:text-indigo-600",
-                                "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold"
-                              )}
-                            >
-                              <span
+                      {user?.boards && user.boards.length > 0 ? (
+                        <ul role="list" className="-mx-2 mt-2 space-y-1">
+                          {user.boards.map((board) => (
+                            <li key={board.id}>
+                              <a
+                                href="#"
                                 className={classNames(
-                                  team.current
-                                    ? "border-indigo-600 text-indigo-600"
-                                    : "border-gray-200 text-gray-400 group-hover:border-indigo-600 group-hover:text-indigo-600",
-                                  "flex size-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium"
+                                  board.status === "active"
+                                    ? "bg-gray-50 text-indigo-600"
+                                    : "text-gray-700 hover:bg-gray-50 hover:text-indigo-600",
+                                  "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold"
                                 )}
                               >
-                                {team.initial}
-                              </span>
-                              <span className="truncate">{team.name}</span>
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
+                                <span
+                                  className={classNames(
+                                    "border-gray-200 text-gray-400 group-hover:border-indigo-600 group-hover:text-indigo-600",
+                                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-white text-sm font-medium"
+                                  )}
+                                >
+                                  {board.name?.charAt(0).toUpperCase()}
+                                </span>
+
+                                <span className="truncate">{board.name}</span>
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="text-sm text-gray-500 mt-4 font-poppins">
+                          No tienes ningun proyecto
+                        </div>
+                      )}
                     </li>
                     <li className="mt-auto">
                       <a
@@ -202,7 +205,6 @@ export default function Layout({ user }: LayoutProps) {
                 <li>
                   <ul role="list" className="-mx-2 space-y-1">
                     {navigation.map((item) => {
-                      
                       const isCurrent = location.pathname === item.href;
 
                       return (
@@ -234,15 +236,15 @@ export default function Layout({ user }: LayoutProps) {
                 </li>
                 <li>
                   <div className="text-xs/6 font-semibold text-gray-400">
-                    Your teams
+                  Active projects
                   </div>
 
                   {user?.boards && user.boards.length > 0 ? (
                     <ul role="list" className="-mx-2 mt-2 space-y-1">
                       {user.boards.map((board) => (
                         <li key={board.id}>
-                          <a
-                            href="#"
+                          <Link
+                            to={`/projects/${board.id}`}
                             className={classNames(
                               board.status === "active"
                                 ? "bg-gray-50 text-indigo-600"
@@ -260,13 +262,13 @@ export default function Layout({ user }: LayoutProps) {
                             </span>
 
                             <span className="truncate">{board.name}</span>
-                          </a>
+                          </Link>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <div className="text-sm text-gray-500 mt-4">
-                      No tienes tableros creados aún.
+                    <div className="text-sm text-gray-500 mt-4 font-poppins">
+                      No tienes ningun proyecto
                     </div>
                   )}
                 </li>

@@ -32,8 +32,8 @@ class ApiService {
       }
 
       return data;
-    } catch (error: any) {
-      console.error("Error fetching data:", error.message);
+    } catch (error: unknown) {
+      console.error("Error fetching data:", error);
       throw error;
     }
   }
