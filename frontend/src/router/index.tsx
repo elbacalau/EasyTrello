@@ -6,7 +6,7 @@ import Projects from "../pages/projects/Projects";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import { Dashboard } from "../pages/Dashboard";
-import { Calendar } from "../pages/Calendar";
+import  Calendar from "../pages/Calendar";
 import { Team } from "../pages/Team";
 import { ProjectDetails } from "../pages/projects/ProjectDetails";
 
@@ -34,7 +34,7 @@ const AppRouter = () => {
           />
 
           {/* dynamic Routes */}
-          <Route path="projects/:id" element={<ProjectDetails />} />
+          <Route path="projects/:boardId" element={<ProjectDetails user={user!}/>} />
         </Route>
         <Route path="*" element={<Login />} />
       </Routes>
