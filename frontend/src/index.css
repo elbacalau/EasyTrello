@@ -2,4 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Regular 400 */
+@font-face {
+  font-family: "Inter";
+  font-weight: 400;
+  font-style: normal;
+  src: url("../public/fonts/inter/Inter_18pt-Regular.ttf") format("woff2");
+}
 
+/* Bold 700 */
+@font-face {
+  font-family: "Inter";
+  font-weight: 700;
+  font-style: normal;
+  src: url("../public/fonts/inter/Inter_18pt-Bold.ttf") format("woff2");
+}
+
+/* Italic 400 */
+@font-face {
+  font-family: "Inter";
+  font-weight: 400;
+  font-style: italic;
+  src: url("../public/fonts/inter/Inter_18pt-MediumItalic.ttf") format("woff2");
+}
+
+/* Bold Italic 700 */
+@font-face {
+  font-family: "Inter";
+  font-weight: 700;
+  font-style: italic;
+  src: url("../public/fonts/inter/Inter_18pt-BoldItalic.ttf") format("woff2");
+}

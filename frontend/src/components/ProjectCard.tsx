@@ -1,6 +1,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { EllipsisHorizontalIcon } from "@heroicons/react/20/solid";
 import { Board } from "../api/interfaces/userData";
+import { Link } from "react-router-dom";
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
@@ -9,9 +10,8 @@ function classNames(...classes: string[]) {
 const statuses: Record<"To-Do" | "In-Progress" | "Done", string> = {
   "To-Do": "text-green-700 bg-green-50 ring-green-600/20",
   "In-Progress": "text-gray-600 bg-gray-50 ring-gray-500/10",
-  "Done": "text-red-700 bg-red-50 ring-red-600/10",
+  Done: "text-red-700 bg-red-50 ring-red-600/10",
 };
-
 
 export default function ProjectCard({ board }: { board: Board }) {
   const updatedAt = board.updatedAt ? new Date(board.updatedAt) : null;
@@ -36,20 +36,12 @@ export default function ProjectCard({ board }: { board: Board }) {
             className="absolute right-0 z-10 mt-0.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none"
           >
             <MenuItem>
-              <a
-                href={`/projects/${board.id}`}
+              <Link
+                to={`/projects/${board.id}`}
                 className="block px-3 py-1 text-sm text-gray-900 hover:bg-gray-50"
               >
                 View<span className="sr-only">, {board.name}</span>
-              </a>
-            </MenuItem>
-            <MenuItem>
-              <a
-                href="#"
-                className="block px-3 py-1 text-sm text-gray-900 hover:bg-gray-50"
-              >
-                Edit<span className="sr-only">, {board.name}</span>
-              </a>
+              </Link>
             </MenuItem>
           </MenuItems>
         </Menu>
@@ -86,6 +78,11 @@ export default function ProjectCard({ board }: { board: Board }) {
               "N/A"
             )}
           </dd>
+        </div>
+
+        <div className="flex justify-between gap-x-4 py-3">
+          <dt className="text-gray-500">Usuarios</dt>
+          <dd className="text-gray-700"> {board.assignedUsers?.length}</dd>
         </div>
       </dl>
     </li>
