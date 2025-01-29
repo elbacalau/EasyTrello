@@ -88,7 +88,7 @@ namespace backend.src.Controllers
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new UnauthorizedAccessException("Usuario no autenticado"));
 
             await _boardService.ChangeUserRole(userId, boardId, tarjetUserId, request.NewRole.ToString());
-            
+
             return Ok(new ApiResponse<string>
             {
                 Result = "success",
@@ -96,5 +96,27 @@ namespace backend.src.Controllers
             });
 
         }
+
+
+        [HttpPost("{boardId}/addColumn")]
+        public async Task<IActionResult> AddColumn(int boardId, [FromBody] AddColumnRequest request)
+        {
+            var column = await _boardService.AddColumn(boardId, request);
+            return Ok(new ApiResponse<AddColumnRequest>
+            {
+                Result = "success",
+                Detail = column
+            });
+        }
+
+        [HttpDelete("{boardId}/column/{columnId}")]
+        public async Task<IActionResult> DeleteAsync(int boardId, int columnId)
+        {
+            await _boardService.DeleteColumn(boardId, columnId);
+
+            return NoContent();
+        }
+
+
     }
 }

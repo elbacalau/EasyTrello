@@ -15,6 +15,33 @@ namespace backend.src.Service
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly IMapper _mapper = mapper;
 
+        public async Task<AddColumnRequest> AddColumn(int boardId, AddColumnRequest request)
+        {
+            Board board = await _context.Boards
+            .Include(b => b.Columns)
+            .FirstOrDefaultAsync(b => b.Id == boardId)
+            ?? throw new ArgumentException("Board not found");
+
+            if (board.Columns.Any(c => c.ColumnName == request.NewColumn))
+            {
+                throw new ArgumentException("A column with this name already exists in the board");
+            }
+
+            var newColumn = new BoardColumn
+            {
+                ColumnName = request.NewColumn,
+                BoardId = board.Id
+            };
+
+            _context.BoardColumns.Add(newColumn);
+            await _context.SaveChangesAsync();
+
+            return new AddColumnRequest
+            {
+                NewColumn = newColumn.ColumnName
+            };
+        }
+
         public async Task<BoardResponse> AssignUserToBoard(AssignUserRequest assignUserRequest)
         {
             // verify if board and user exists
@@ -133,6 +160,20 @@ namespace backend.src.Service
 
         }
 
+        public async Task DeleteColumn(int boardId, int columnId)
+        {
+            Board board = await _context.Boards
+                .Include(b => b.Columns)
+                .FirstOrDefaultAsync(b => b.Id == boardId)
+                ?? throw new ArgumentException("No boards found");
+
+            BoardColumn boardColumn = board.Columns.FirstOrDefault(bc => bc.Id == columnId) 
+                ?? throw new ArgumentException("No column found");
+            
+            _context.BoardColumns.Remove(boardColumn);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task DeleteUserFromBoard(int boardId, int userId)
         {
             // founbd user and board
@@ -154,10 +195,6 @@ namespace backend.src.Service
                 .Include(bc => bc.Columns),
                 ];
 
-            boards.ForEach(b =>
-            {
-                Console.WriteLine("Columnas del tablero: ", b.Columns);
-            });
 
             return Task.FromResult(_mapper.Map<List<BoardResponse>>(boards));
         }
