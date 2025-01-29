@@ -11,6 +11,7 @@ namespace backend.Data
         public required DbSet<TaskModel> Tasks { get; set; }
         public required DbSet<BoardUser> BoardUsers { get; set; }
         public required DbSet<TaskComment> TaskComments { get; set; }
+        public required DbSet<BoardColumn> BoardColumns { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -53,7 +54,15 @@ namespace backend.Data
             modelBuilder.Entity<TaskComment>()
                 .HasOne(tc => tc.User)
                 .WithMany()
-                .HasForeignKey(tc => tc.UserId);    
+                .HasForeignKey(tc => tc.UserId);
+
+
+
+            modelBuilder.Entity<BoardColumn>()
+                .HasOne(c => c.Board)
+                .WithMany(b => b.Columns)
+                .HasForeignKey(c => c.BoardId)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
     }

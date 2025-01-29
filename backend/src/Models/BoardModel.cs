@@ -3,7 +3,7 @@ using backend.Models;
 
 namespace backend.src.Models
 {
-    
+
     public class Board
     {
         public int Id { get; set; }
@@ -22,6 +22,7 @@ namespace backend.src.Models
 
         public ICollection<TaskModel>? Tasks { get; set; } = [];
         public ICollection<BoardUser> BoardUsers { get; set; } = [];
+        public ICollection<BoardColumn> Columns { get; set; } = [];
 
     }
 }

@@ -15,7 +15,6 @@ namespace backend.src.Infrastructure.Mapper
         {
 
             CreateMap<BoardRequest, Board>()
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.Visibility, opt => opt.MapFrom(src => src.Visibility ?? "Público"))
                 .ForMember(dest => dest.BackgroundColor, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedByUserId, opt => opt.Ignore())
@@ -44,7 +43,6 @@ namespace backend.src.Infrastructure.Mapper
                 }).ToList()));
 
             // MAPS
-            CreateMap<Board, BoardRequest>();
             CreateMap<Board, BoardResponse>()
                 .ForMember(dest => dest.AssignedUsers, opt => opt.MapFrom(src => src.BoardUsers.Select(bu => new UserResponse
                 {
@@ -53,6 +51,11 @@ namespace backend.src.Infrastructure.Mapper
                     Email = bu.User.Email,
                     PhoneNumber = bu.User.PhoneNumber!,
                     Role = bu.Role.ToString()
+                })))
+                .ForMember(dest => dest.BoardColumns, opt => opt.MapFrom(src => src.Columns.Select(c => new BoardColumnResponse
+                {
+                    Id = c.Id,
+                    ColumnName = c.ColumnName
                 })));
 
             CreateMap<User, UserResponse>();

@@ -74,7 +74,7 @@ namespace backend.src.Service
                 throw new ArgumentException("El nombre del tablero ya existe");
             }
 
-            
+
             User creatorUser = await _context.Users.FindAsync(userId) ?? throw new ArgumentException("User not found");
 
             var newBoard = _mapper.Map<Board>(board);
@@ -82,6 +82,16 @@ namespace backend.src.Service
             newBoard.BackgroundColor = "#FFFFFF";
             newBoard.CreatedAt = DateTime.UtcNow;
             newBoard.UpdatedAt = DateTime.UtcNow;
+            newBoard.Status = "En progreso";
+
+            var defaultColumns = new List<BoardColumn>
+            {
+                new BoardColumn { ColumnName = "Por hacer", Board = newBoard },
+                new BoardColumn { ColumnName = "En progreso", Board = newBoard },
+                new BoardColumn { ColumnName = "Completado", Board = newBoard }
+            };
+
+            newBoard.Columns = defaultColumns;
 
             _context.Boards.Add(newBoard);
             await _context.SaveChangesAsync();
@@ -137,11 +147,17 @@ namespace backend.src.Service
             // found user
             var user = _context.Users.FirstOrDefault(u => u.Id == userId) ?? throw new UnauthorizedAccessException("User not found");
 
-            var boards = _context.Boards
+            List<Board> boards = [.. _context.Boards
                 .Where(b => b.CreatedByUserId == userId)
                 .Include(b => b.BoardUsers)
                 .ThenInclude(bu => bu.User)
-                .ToList();
+                .Include(bc => bc.Columns),
+                ];
+
+            boards.ForEach(b =>
+            {
+                Console.WriteLine("Columnas del tablero: ", b.Columns);
+            });
 
             return Task.FromResult(_mapper.Map<List<BoardResponse>>(boards));
         }

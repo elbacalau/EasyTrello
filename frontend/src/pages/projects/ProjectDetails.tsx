@@ -3,10 +3,10 @@ import { UserData } from "../../api/interfaces/userData";
 
 export const ProjectDetails = ({ user }: { user: UserData }) => {
   const { boardId } = useParams();
-  console.log(boardId);
+  
   
   const board = user.boards?.find((b) => b.id === Number(boardId))
-  console.log(board);
+  
   
   if (!board) {
     return <div>No se encontro el proyecto.</div>
