@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using backend.Data;
 using backend.Models;
 using backend.src.DTOs;
@@ -62,18 +63,14 @@ namespace backend.src.Service
                 ?? throw new UnauthorizedAccessException("Usuario no autenticado"));
 
             var user = await _context.Users
-                .Include(u => u.BoardUsers)
-                .ThenInclude(bu => bu.Board)
-                .ThenInclude(b => b.BoardUsers)
-                .ThenInclude(bu => bu.User)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                .Where(u => u.Id == userId)
+                .ProjectTo<UserDataResponse>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync();
 
             if (user == null)
                 throw new ArgumentException("Usuario no encontrado.");
 
-            var response = _mapper.Map<UserDataResponse>(user);
-
-            return response;
+            return user;
         }
 
     }

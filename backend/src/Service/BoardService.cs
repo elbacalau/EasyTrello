@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using backend.Data;
 using backend.Models;
 using backend.src.DTOs.BoardDTOs;
@@ -183,20 +184,19 @@ namespace backend.src.Service
             await _context.SaveChangesAsync();
         }
 
-        public Task<List<BoardResponse>> GetBoards(int userId)
+        public async Task<List<BoardResponse>> GetBoards(int userId)
         {
             // found user
             var user = _context.Users.FirstOrDefault(u => u.Id == userId) ?? throw new UnauthorizedAccessException("User not found");
 
-            List<Board> boards = [.. _context.Boards
+            List<BoardResponse> boards = await _context.Boards
                 .Where(b => b.CreatedByUserId == userId)
-                .Include(b => b.BoardUsers)
-                .ThenInclude(bu => bu.User)
-                .Include(bc => bc.Columns),
-                ];
+                .ProjectTo<BoardResponse>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+                
 
 
-            return Task.FromResult(_mapper.Map<List<BoardResponse>>(boards));
+            return boards;
         }
 
 

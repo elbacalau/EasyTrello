@@ -13,7 +13,7 @@ namespace backend.src.Infrastructure.Mapper
     {
         public MappingProfile()
         {
-
+            // map boardrequest to board
             CreateMap<BoardRequest, Board>()
                 .ForMember(dest => dest.Visibility, opt => opt.MapFrom(src => src.Visibility ?? "Público"))
                 .ForMember(dest => dest.BackgroundColor, opt => opt.Ignore())
@@ -21,28 +21,7 @@ namespace backend.src.Infrastructure.Mapper
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
-            CreateMap<User, UserDataResponse>()
-                .ForMember(dest => dest.Boards, opt => opt.MapFrom(src => src.BoardUsers.Select(bu => new BoardResponse
-                {
-                    Id = bu.Board.Id,
-                    Name = bu.Board.Name,
-                    Description = bu.Board.Description,
-                    Status = bu.Board.Status,
-                    Visibility = bu.Board.Visibility,
-                    CreatedAt = bu.Board.CreatedAt,
-                    UpdatedAt = bu.Board.UpdatedAt,
-                    BackgroundColor = bu.Board.BackgroundColor,
-                    AssignedUsers = bu.Board.BoardUsers.Select(bbu => new UserResponse
-                    {
-                        FirstName = bbu.User.FirstName,
-                        LastName = bbu.User.LastName,
-                        Email = bbu.User.Email,
-                        PhoneNumber = bbu.User.PhoneNumber!,
-                        Role = bbu.Role.ToString()
-                    }).ToList()
-                }).ToList()));
-
-            // MAPS
+            // map board to boardresponse
             CreateMap<Board, BoardResponse>()
                 .ForMember(dest => dest.AssignedUsers, opt => opt.MapFrom(src => src.BoardUsers.Select(bu => new UserResponse
                 {
@@ -58,9 +37,21 @@ namespace backend.src.Infrastructure.Mapper
                     ColumnName = c.ColumnName
                 })));
 
-            CreateMap<User, UserResponse>();
+            // map boardcolumn to boardcolumnresponse
+            CreateMap<BoardColumn, BoardColumnResponse>();
 
-            // MAPS Task
+            // map user to userresponse (fixing missing type map issue)
+            CreateMap<User, UserResponse>()
+                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber));
+
+            // map user to userdataresponse
+            CreateMap<User, UserDataResponse>()
+                .ForMember(dest => dest.Boards, opt => opt.MapFrom(src => src.BoardUsers.Select(bu => bu.Board)));
+
+            // map taskmodel to taskresponse
             CreateMap<TaskModel, TaskResponse>()
                 .ForMember(dest => dest.BoardName, opt => opt.MapFrom(src => src.Board!.Name))
                 .ForMember(dest => dest.AssignedUserName, opt => opt.MapFrom(src => $"{src.AssignedUser!.FirstName} {src.AssignedUser.LastName}"))
@@ -76,31 +67,29 @@ namespace backend.src.Infrastructure.Mapper
                     UserName = $"{c.User.FirstName} {c.User.LastName}"
                 }).ToList()));
 
-
+            // map taskrequest to taskmodel
             CreateMap<TaskRequest, TaskModel>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Enum.Parse<Models.TaskStatus>(src.Status, true)))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => Enum.Parse<TaskPriority>(src.Priority, true)));
 
-
-
-            // TASK COMMENTS
+            // map taskcommentrequest to taskcomment
             CreateMap<TaskCommentRequest, TaskComment>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.TaskId, opt => opt.Ignore())
                 .ForMember(dest => dest.UserId, opt => opt.Ignore());
 
+            // map taskcomment to taskcommentresponse
             CreateMap<TaskComment, TaskCommentResponse>()
-            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => $"{src.User.FirstName} {src.User.LastName}"));
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => $"{src.User.FirstName} {src.User.LastName}"));
 
-
-            // map TaskModel to TaskResponse
+            // map taskmodel to taskresponse (duplicated in original, keeping the relevant parts)
             CreateMap<TaskModel, TaskResponse>()
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments));
 
-            // map TaskComment to TaskCommentResponse
+            // map taskcomment to taskcommentresponse (duplicated, merged into one)
             CreateMap<TaskComment, TaskCommentResponse>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName + " " + src.User.LastName));
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => $"{src.User.FirstName} {src.User.LastName}"));
         }
     }
 }
