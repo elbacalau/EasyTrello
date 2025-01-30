@@ -20,6 +20,7 @@ export interface Board {
   createdAt:       Date;
   updatedAt:       Date;
   assignedUsers?:   AssignedUser[];
+  boardColumns?:    BoardColumn[];
   backgroundColor?: string;
 }
 
@@ -30,6 +31,12 @@ export interface AssignedUser {
   phoneNumber?: string;
   role?:        string;
 }
+
+export interface BoardColumn {
+  id?:         number;
+  columnName?: string;
+}
+
 
 export interface LayoutProps { 
   user: UserData | null;
