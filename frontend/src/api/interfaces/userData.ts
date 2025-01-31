@@ -33,6 +33,7 @@ export interface AssignedUser {
 }
 
 export interface BoardColumn {
+  tasks: never[];
   id?:         number;
   columnName?: string;
 }

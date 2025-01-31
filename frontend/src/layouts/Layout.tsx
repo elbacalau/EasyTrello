@@ -141,8 +141,8 @@ export default function Layout({ user }: LayoutProps) {
                         <ul role="list" className="-mx-2 mt-2 space-y-1">
                           {user.boards.map((board) => (
                             <li key={board.id}>
-                              <a
-                                href="#"
+                              <Link
+                                to={`/projects/${board.id}`}
                                 className={classNames(
                                   board.status === "active"
                                     ? "bg-gray-50 text-indigo-600"
@@ -160,7 +160,7 @@ export default function Layout({ user }: LayoutProps) {
                                 </span>
 
                                 <span className="truncate">{board.name}</span>
-                              </a>
+                              </Link>
                             </li>
                           ))}
                         </ul>

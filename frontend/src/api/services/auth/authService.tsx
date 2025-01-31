@@ -12,8 +12,8 @@ export const login = async (
     });
 
     return response.detail;
-  } catch (error: any) {
-    console.error("Error fetching data:", error.message);
+  } catch (error: unknown) {
+    console.error("Error fetching data:", error);
     throw error;
   }
 };
@@ -28,8 +28,8 @@ export const getUserData = async (): Promise<UserData> => {
 
     return response.detail;
     
-  } catch (error: any) {
-    console.error("Error fetching data:", error.message);
+  } catch (error: unknown) {
+    console.error("Error fetching data:", error);
     throw error;
   }
 };
