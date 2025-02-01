@@ -29,6 +29,11 @@ export default function TaskInfo({
     setTimeout(onClose, 300);
   };
 
+  const handleDeleteCommentary = (commentId: number) => {
+    console.log("Comentario eliminado con el ID:", commentId);
+    // TODO: Api Service para eliminar el comentario
+  }
+
   return (
     <div
       className={`fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 transition-opacity duration-300 ${
@@ -123,7 +128,7 @@ export default function TaskInfo({
           </div>
 
           {/* comentarios */}
-          <CommentsComponent comments={task.comments ?? []} />
+          <CommentsComponent comments={task.comments ?? []} onDelete={handleDeleteCommentary} />
 
           <button
             className={`mt-4 w-full py-2 text-white rounded-md transition ${

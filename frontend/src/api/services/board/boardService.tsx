@@ -18,8 +18,6 @@ export const getTaskFromBoard = async (
   }
 };
 
-
-
 // get columns
 export const getColumnsFromBoard = async (
   boardId: number
@@ -33,3 +31,5 @@ export const getColumnsFromBoard = async (
     throw error;
   }
 };
+
+
