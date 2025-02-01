@@ -1,7 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
-  AssignedUser,
   Board,
   BoardColumn,
   UserData,
@@ -10,7 +9,7 @@ import { BoardColumnComponent } from "../../components/BoardColumn";
 import { getTaskFromBoard } from "../../api/services/board/boardService";
 import { TaskInterface } from "../../api/interfaces/task";
 import { capitalize } from "../../utils/helpers";
-import { BoardRole } from "../../api/interfaces/board";
+import { AssignedUser } from "../../api/interfaces/board";
 
 export const ProjectDetails = ({ user }: { user: UserData }) => {
   const { boardId } = useParams();
@@ -46,24 +45,16 @@ export const ProjectDetails = ({ user }: { user: UserData }) => {
       (au) => au.email === user.email
     );
 
-
-    if (
-      userEmail?.role &&
-      (BoardRole[userEmail.role as unknown as keyof typeof BoardRole] ===
-        BoardRole.Owner || 
-        BoardRole[userEmail.role as unknown as keyof typeof BoardRole] === BoardRole.Admin)
-    ) {
+    if (userEmail?.role === "Owner" || userEmail?.role === "Admin") {
       setUserRole(true);
     } else {
       setUserRole(false);
     }
+    
   }, [board, user.email]);
 
-  useEffect(() => {
-  }, [userRole]);
+  useEffect(() => {}, [userRole]);
 
-
-  
   return (
     <div key={boardId} className="flex flex-col h-full ">
       <div className="flex items-center justify-between mb-6">
@@ -80,6 +71,7 @@ export const ProjectDetails = ({ user }: { user: UserData }) => {
               column={col}
               tasks={tasks}
               isEditingEnabled={userRole}
+              assignedUsers={board?.assignedUsers ?? []}
             />
           ))
         ) : (

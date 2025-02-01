@@ -7,21 +7,23 @@ import {
   EllipsisHorizontalIcon,
 } from "@heroicons/react/24/outline";
 import TaskInfo from "./TaskInfo";
+import { AssignedUser } from "../api/interfaces/board";
 
 interface BoardColumnProps {
   column: BoardColumn;
   tasks: TaskInterface[];
   isEditingEnabled: boolean;
+  assignedUsers: AssignedUser[];
 }
 
 export const BoardColumnComponent: React.FC<BoardColumnProps> = ({
   column,
   tasks = [],
   isEditingEnabled,
+  assignedUsers,
 }) => {
   const [selectedTask, setSelectedTask] = useState<TaskInterface | null>(null);
-  
-  
+
   return (
     <div className="w-72 bg-gray-200 shadow-xl rounded-lg p-4 border-t-4 border-blue-500 h-auto font-inter">
       <div className="flex justify-between items-center mb-4">
@@ -65,6 +67,7 @@ export const BoardColumnComponent: React.FC<BoardColumnProps> = ({
           task={selectedTask}
           onClose={() => setSelectedTask(null)}
           editingEnabled={isEditingEnabled}
+          assignedUsers={assignedUsers}
         />
       )}
     </div>

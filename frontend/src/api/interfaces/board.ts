@@ -16,7 +16,7 @@ export interface AssignedUser {
   lastName?: string;
   email?: string;
   phoneNumber?: string;
-  role?: string;
+  role?: BoardRole;
 }
 
 export interface BoardColumn {
@@ -24,9 +24,4 @@ export interface BoardColumn {
   columnName?: string;
 }
 
-export enum BoardRole {
-  Owner = 1,
-  Admin = 2,
-  User = 3,
-  Viewer = 4,
-}
+export type BoardRole = "Owner" | "Admin" | "User" | "Viewer";

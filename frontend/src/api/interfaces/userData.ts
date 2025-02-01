@@ -1,4 +1,4 @@
-import { BoardRole } from "./board";
+import { AssignedUser } from "./board";
 
 export interface UserData {
   id?:                number;
@@ -26,13 +26,6 @@ export interface Board {
   backgroundColor?: string;
 }
 
-export interface AssignedUser {
-  firstName?:   string;
-  lastName?:    string;
-  email?:       string;
-  phoneNumber?: string;
-  role?:        BoardRole;
-}
 
 export interface BoardColumn {
   tasks: never[];
@@ -44,4 +37,5 @@ export interface BoardColumn {
 export interface LayoutProps { 
   user: UserData | null;
 }
+
 

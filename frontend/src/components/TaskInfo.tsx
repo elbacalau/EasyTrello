@@ -2,17 +2,21 @@ import { useEffect, useState } from "react";
 import { TaskInterface } from "../api/interfaces/task";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import CommentsComponent from "./Comments";
+import { AssignedUsers } from "./AssignedUsers";
+import { AssignedUser } from "../api/interfaces/board";
 
 interface TaskInfoProps {
   task: TaskInterface;
   onClose: () => void;
   editingEnabled?: boolean;
+  assignedUsers: AssignedUser[];
 }
 
 export default function TaskInfo({
   task,
   onClose,
   editingEnabled,
+  assignedUsers,
 }: TaskInfoProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [name, setName] = useState(task.name);
@@ -29,10 +33,6 @@ export default function TaskInfo({
     setTimeout(onClose, 300);
   };
 
-  const handleDeleteCommentary = (commentId: number) => {
-    console.log("Comentario eliminado con el ID:", commentId);
-    // TODO: Api Service para eliminar el comentario
-  }
 
   return (
     <div
@@ -111,24 +111,33 @@ export default function TaskInfo({
             </div>
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-gray-700">
-              Etiquetas
-            </label>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {task.labels!.map((label, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700"
-                >
-                  {label}
-                </span>
-              ))}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Etiquetas */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Etiquetas
+              </label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {task.labels!.map((label, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
             </div>
+
+            {/* usuarios asignados a la tarea */}
+            <AssignedUsers assignedUsers={assignedUsers} />
           </div>
 
           {/* comentarios */}
-          <CommentsComponent comments={task.comments ?? []} onDelete={handleDeleteCommentary} />
+          <CommentsComponent
+            comments={task.comments ?? []}
+            onDelete={() => {}}
+          />
 
           <button
             className={`mt-4 w-full py-2 text-white rounded-md transition ${
