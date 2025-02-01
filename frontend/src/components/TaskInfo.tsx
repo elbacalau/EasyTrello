@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { TaskInterface } from "../api/interfaces/task";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import CommentsComponent from "./Comments";
 
 interface TaskInfoProps {
   task: TaskInterface;
@@ -13,8 +14,6 @@ export default function TaskInfo({
   onClose,
   editingEnabled,
 }: TaskInfoProps) {
-  
-
   const [isVisible, setIsVisible] = useState(false);
   const [name, setName] = useState(task.name);
   const [description, setDescription] = useState(task.description);
@@ -123,42 +122,28 @@ export default function TaskInfo({
             </div>
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-gray-700">
-              Comentarios
-            </label>
-            <div className="mt-2 space-y-2 max-h-40 overflow-auto">
-              {task.comments!.map((comment) => (
-                <div key={comment.id} className="p-2 border rounded-md">
-                  <p className="text-sm font-semibold">{comment.userName}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(comment.createdAt!).toLocaleString()}
-                  </p>
-                  <p className="text-sm">{comment.comment}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* comentarios */}
+          <CommentsComponent comments={task.comments ?? []} />
+
+          <button
+            className={`mt-4 w-full py-2 text-white rounded-md transition ${
+              editingEnabled
+                ? "bg-green-600 hover:bg-green-500 cursor-pointer"
+                : "bg-gray-700 cursor-not-allowed"
+            }`}
+            onClick={() => {}}
+            disabled={editingEnabled}
+          >
+            Guardar Cambios
+          </button>
+
+          <button
+            className="mt-2 w-full py-2 bg-gray-500 text-white rounded-md hover:bg-gray-400 transition"
+            onClick={handleClose}
+          >
+            Cerrar
+          </button>
         </div>
-
-        <button
-          className={`mt-4 w-full py-2 text-white rounded-md transition ${
-            editingEnabled
-              ? "bg-green-600 hover:bg-green-500 cursor-pointer"
-              : "bg-gray-700 cursor-not-allowed"
-          }`}
-          onClick={() => {}}
-          disabled={editingEnabled}
-        >
-          Guardar Cambios
-        </button>
-
-        <button
-          className="mt-2 w-full py-2 bg-gray-500 text-white rounded-md hover:bg-gray-400 transition"
-          onClick={handleClose}
-        >
-          Cerrar
-        </button>
       </div>
     </div>
   );

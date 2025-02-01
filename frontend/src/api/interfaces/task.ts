@@ -13,10 +13,10 @@ export interface TaskInterface {
   assignedUserId?:   number;
   assignedUserName?: null;
   labels?:           string[];
-  comments?:         Comment[];
+  comments?:         TaskComment[];
 }
 
-export interface Comment {
+export interface TaskComment {
   id?:        number;
   comment?:   string;
   createdAt?: Date;
