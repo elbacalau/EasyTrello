@@ -4,12 +4,12 @@ import ProjectCard from "../../components/ProjectCard";
 const Projects = ({ boards }: { boards: Board[] }) => {
   return (
     <div className="lg:flex lg:h-full lg:flex-col">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-5xl font-inter font-bold mb-20">Proyectos</h1>
-        <div className="px-4 py-6 mt-12">
+      <div className="flex-col ">
+        <h1 className="text-5xl font-inter font-bold mb-12">Proyectos</h1>
+        <div className="mb-4 w-fit ">
           <button
             type="button"
-            className="flex ml-6 rounded-md bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            className="flex rounded-md bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             onClick={() => {}}
           >
             <span>

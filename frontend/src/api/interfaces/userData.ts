@@ -1,3 +1,5 @@
+import { BoardRole } from "./board";
+
 export interface UserData {
   id?:                number;
   firstName?:         string;
@@ -29,7 +31,7 @@ export interface AssignedUser {
   lastName?:    string;
   email?:       string;
   phoneNumber?: string;
-  role?:        string;
+  role?:        BoardRole;
 }
 
 export interface BoardColumn {
