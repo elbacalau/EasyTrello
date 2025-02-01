@@ -1,24 +1,11 @@
-import { AssignedUser, BoardRole } from "../api/interfaces/board";
+import { AssignedUser } from "../api/interfaces/board";
+import { getBadgeColor } from "../utils/helpers";
 
 interface AssignedUsersProps {
   assignedUsers: AssignedUser[];
 }
 
-// Función para asignar colores según el rol del usuario
-const getBadgeColor = (role?: BoardRole) => {
-  switch (role) {
-    case "Owner":
-      return "bg-red-100 text-red-700"; 
-    case "Admin":
-      return "bg-blue-100 text-blue-700";
-    case "User":
-      return "bg-green-100 text-green-700";
-    case "Viewer":
-      return "bg-gray-100 text-gray-700"; 
-    default:
-      return "bg-gray-200 text-gray-800";
-  }
-};
+
 
 export const AssignedUsers = ({ assignedUsers }: AssignedUsersProps) => {
   return (
