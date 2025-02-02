@@ -63,6 +63,7 @@ export const ProjectDetails = ({ user }: { user: UserData }) => {
         </h1>
       </div>
 
+
       <div className="flex gap-6 overflow-x-auto">
         {allColumns.length > 0 ? (
           allColumns.map((col) => (

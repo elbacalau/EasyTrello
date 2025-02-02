@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AssignedUser } from "../api/interfaces/board";
 import { getBadgeColor } from "../utils/helpers";
-import { PlusCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 interface AssignedUsersProps {
   assignedUsers: AssignedUser[];
@@ -11,6 +11,7 @@ export const AssignedUsers = ({ assignedUsers }: AssignedUsersProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<AssignedUser[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<AssignedUser[]>([]);
+  const [saveMode, setSaveMode] = useState<boolean>(false);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value.toLowerCase();
@@ -39,20 +40,40 @@ export const AssignedUsers = ({ assignedUsers }: AssignedUsersProps) => {
     setSelectedUsers(removedUserList);
   };
 
-  const handleAddUser = (boardId: number, taskId: number, userId: number, selectedListUsers: AssignedUser[]) => {
-    // TODO: CREAR 2 BOTONES DEBAJO PARA AÑADIR O ELIMINAR USUARIOS
-    // TODO: SEUGN EL QUE ESTE ACTIVADO SERA LA ACCION QUE SE TOME AL GUARDAR CAMBIOS
-  }
-  
+  const handleAddUser = (
+    boardId: number,
+    taskId: number,
+    userId: number,
+    selectedListUsers: AssignedUser[]
+  ) => {
+    
+  };
+
   return (
     <div>
-      <label className="text-sm font-medium text-gray-700 flex">
-        Usuarios
+      <label className="text-sm font-medium text-gray-700 flex items-center gap-4">
+        Asignar - Eliminar usuarios
         {selectedUsers.length > 0 && (
-          <button className="duration-150 hover:text-blue-500" onClick={() => handleAddUser}>
-            {" "}
-            <PlusCircleIcon className="size-5 ml-1" />{" "}
-          </button>
+          <div className="flex gap-2">
+            <button
+              className={`px-3 py-1 text-xs rounded-md transition ${
+                saveMode
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-200 text-gray-600"
+              }`}
+              onClick={() => setSaveMode(true)}
+            >
+              Añadir
+            </button>
+            <button
+              className={`px-3 py-1 text-xs rounded-md transition ${
+                !saveMode ? "bg-red-600 text-white" : "bg-gray-200 text-gray-600"
+              }`}
+              onClick={() => setSaveMode(false)}
+            >
+              Eliminar
+            </button>
+          </div>
         )}
       </label>
 

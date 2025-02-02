@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import TaskInfo from "./TaskInfo";
 import { AssignedUser } from "../api/interfaces/board";
+import AddNewTask from "./AddNewTask";
 
 interface BoardColumnProps {
   column: BoardColumn;
@@ -23,6 +24,11 @@ export const BoardColumnComponent: React.FC<BoardColumnProps> = ({
   assignedUsers,
 }) => {
   const [selectedTask, setSelectedTask] = useState<TaskInterface | null>(null);
+  const [addTaskOpen, setAddTaskOpen] = useState<boolean>(false);
+
+  const handleOpenModalAddTask = () => {
+    setAddTaskOpen(true);
+  }
 
   return (
     <div className="w-72 bg-gray-200 shadow-xl rounded-lg p-4 border-t-4 border-blue-500 h-auto font-inter">
@@ -58,7 +64,7 @@ export const BoardColumnComponent: React.FC<BoardColumnProps> = ({
         )}
       </div>
 
-      <button className="mt-4 w-full py-2 flex rounded-md bg-indigo-600 px-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+      <button className="mt-4 w-full py-2 flex rounded-md bg-indigo-600 px-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600" onClick={handleOpenModalAddTask}>
         + Agregar tarea
       </button>
 
@@ -69,6 +75,11 @@ export const BoardColumnComponent: React.FC<BoardColumnProps> = ({
           editingEnabled={isEditingEnabled}
           assignedUsers={assignedUsers}
         />
+      )}
+
+
+      {addTaskOpen && (
+        <AddNewTask onClose={() => setAddTaskOpen(false)}/>
       )}
     </div>
   );

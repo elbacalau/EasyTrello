@@ -33,7 +33,8 @@ export default function TaskInfo({
     setTimeout(onClose, 300);
   };
 
-
+  console.log(editingEnabled);
+  
   return (
     <div
       className={`fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 transition-opacity duration-300 ${
@@ -42,7 +43,7 @@ export default function TaskInfo({
       onClick={handleClose}
     >
       <div
-        className={`bg-white p-6 rounded-lg shadow-lg max-w-lg w-full transform transition-all duration-300 ${
+        className={`bg-white p-6 rounded-lg shadow-lg max-w-screen-md w-full transform transition-all duration-300 ${
           isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -64,6 +65,7 @@ export default function TaskInfo({
               className="w-full mt-1 p-2 border rounded-md"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              disabled={!editingEnabled}
             />
           </div>
 
@@ -76,6 +78,7 @@ export default function TaskInfo({
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              disabled={!editingEnabled}
             />
           </div>
 
