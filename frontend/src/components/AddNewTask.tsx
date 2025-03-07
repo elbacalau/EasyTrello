@@ -5,6 +5,16 @@ interface TaskInfoProps {
   onClose: () => void;
 }
 
+export interface CreateTaskRequest {
+  name: string;
+  description: string;
+  dueDate: Date;
+  status: string;
+  priority: string;
+  completed: boolean;
+  labels: string[];
+}
+
 export default function AddNewTask({ onClose }: TaskInfoProps) {
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
@@ -25,7 +35,7 @@ export default function AddNewTask({ onClose }: TaskInfoProps) {
       onClick={handleClose}
     >
       <div
-        className={`bg-white p-6 rounded-lg shadow-lg max-w-lg w-full transform transition-all duration-300 ${
+        className={`bg-white p-6 rounded-lg shadow-lg max-w-xl w-full transform transition-all duration-300 ${
           isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -39,6 +49,57 @@ export default function AddNewTask({ onClose }: TaskInfoProps) {
           </button>
         </div>
         {/* resto de contenido */}
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium text-gray-700">Nombre</label>
+            <input
+              type="text"
+              className="w-full mt-1 p-2 border rounded-md"
+              placeholder="Nombre de la tarea"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Descripción
+            </label>
+            <input
+              type="text"
+              className="w-full mt-1 p-2 border rounded-md"
+              placeholder="Descripción"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Fecha límite
+            </label>
+            <input
+              type="date"
+              className="w-full mt-1 p-2 border rounded-md"
+              placeholder="Nombre de la tarea"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">Estatus</label>
+
+            <select className="w-full mt-1 p-2 border rounded-md">
+              <option value="Pending">Pendiente</option>
+              <option value="In Progress">En Progreso</option>
+              <option value="Completed">Completado</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700">Prioridad</label>
+
+            <select className="w-full mt-1 p-2 border rounded-md">
+              <option value="Pending">Low</option>
+              <option value="In Progress">Medium</option>
+              <option value="Completed">High</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
   );

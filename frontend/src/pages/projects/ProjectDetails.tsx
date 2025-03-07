@@ -1,10 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import {
-  Board,
-  BoardColumn,
-  UserData,
-} from "../../api/interfaces/userData";
+import { Board, BoardColumn, UserData } from "../../api/interfaces/userData";
 import { BoardColumnComponent } from "../../components/BoardColumn";
 import { getTaskFromBoard } from "../../api/services/board/boardService";
 import { TaskInterface } from "../../api/interfaces/task";
@@ -50,7 +46,6 @@ export const ProjectDetails = ({ user }: { user: UserData }) => {
     } else {
       setUserRole(false);
     }
-    
   }, [board, user.email]);
 
   useEffect(() => {}, [userRole]);
@@ -62,7 +57,6 @@ export const ProjectDetails = ({ user }: { user: UserData }) => {
           {capitalize(board?.name ?? "Tablero")}
         </h1>
       </div>
-
 
       <div className="flex gap-6 overflow-x-auto">
         {allColumns.length > 0 ? (

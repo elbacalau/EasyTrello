@@ -28,7 +28,7 @@ export const BoardColumnComponent: React.FC<BoardColumnProps> = ({
 
   const handleOpenModalAddTask = () => {
     setAddTaskOpen(true);
-  }
+  };
 
   return (
     <div className="w-72 bg-gray-200 shadow-xl rounded-lg p-4 border-t-4 border-blue-500 h-auto font-inter">
@@ -64,7 +64,15 @@ export const BoardColumnComponent: React.FC<BoardColumnProps> = ({
         )}
       </div>
 
-      <button className="mt-4 w-full py-2 flex rounded-md bg-indigo-600 px-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600" onClick={handleOpenModalAddTask}>
+      <button
+        className={`mt-4 w-full py-2 flex rounded-md px-2 text-sm font-semibold text-white shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
+          isEditingEnabled
+            ? "bg-indigo-600 hover:bg-indigo-500"
+            : "bg-gray-300 cursor-not-allowed"
+        }`}
+        onClick={handleOpenModalAddTask}
+        disabled={!isEditingEnabled}
+      >
         + Agregar tarea
       </button>
 
@@ -77,10 +85,7 @@ export const BoardColumnComponent: React.FC<BoardColumnProps> = ({
         />
       )}
 
-
-      {addTaskOpen && (
-        <AddNewTask onClose={() => setAddTaskOpen(false)}/>
-      )}
+      {addTaskOpen && <AddNewTask onClose={() => setAddTaskOpen(false)} />}
     </div>
   );
 };
