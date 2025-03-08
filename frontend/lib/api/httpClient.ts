@@ -1,7 +1,7 @@
 import { ApiResponse } from "@/types/apiResponse";
 
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5268/api";
 
 export type FetchOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
