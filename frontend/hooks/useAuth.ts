@@ -41,7 +41,6 @@ export const useAuth = () => {
       }
       return false
     } catch (error: any) {
-      return false
       throw new Error(`Error ${error}`);
       console.error(error);
     } finally {
