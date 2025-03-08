@@ -1,7 +1,9 @@
-import { apiLogin } from "@/lib/api/auth";
+import { apiLogin, apiUserData } from "@/lib/api/auth";
 import { hideLoader, showLoader } from "@/store/slices/loaderSlice";
 import { ApiResponse } from "@/types/apiResponse";
 import { useAppDispatch } from "@/types/hooks";
+import { UserData } from "@/types/userData";
+import { useEffect } from "react";
 
 
 interface LoginForm {
@@ -11,6 +13,25 @@ interface LoginForm {
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
+
+  
+  const userData = async () => {
+    useEffect(() => {
+      const fetchUserData = async () => {
+        try {
+          const response: ApiResponse<UserData> = await apiUserData();
+          const userData: UserData = response.detail;
+          return response;
+          
+        } catch (error) {
+          
+        }
+      };
+      fetchUserData();
+    }, []);
+
+
+  }
 
   const login = async (loginForm: LoginForm) => {
     try {
@@ -23,9 +44,7 @@ export const useAuth = () => {
       const token: string = response.detail;
       if (response.result == 'success' && token) {
         localStorage.setItem('token', token)
-        
-        // TODO: add token intercept to client
-
+        userData();
         // TODO: fetch User data
       }
     } catch (error: any) {
