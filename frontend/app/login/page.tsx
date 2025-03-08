@@ -45,7 +45,7 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: LoginFormInputs) => {
-    login(data);
+    if (await login(data)) router.push("/dashboard");
   };
 
   return (
