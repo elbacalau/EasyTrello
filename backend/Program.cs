@@ -68,13 +68,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder =>
+    options.AddPolicy("AllowSpecificOrigins", builder =>
     {
-        builder.AllowAnyOrigin()
+        builder.WithOrigins("http://localhost:3000", "http://localhost:5173")
                .AllowAnyMethod()
-               .AllowAnyHeader();
+               .AllowAnyHeader()
+               .AllowCredentials(); 
     });
 });
+
 
 
 
@@ -111,11 +113,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+Console.WriteLine("CORS Configurado para: http://localhost:3000 y http://localhost:5173");
 
 
-// middlewares       
-app.UseHandleOptionsMiddleware();   
-app.UseCors();                       
+// middlewares   
+app.UseCors("AllowSpecificOrigins");                       
 app.UseAuthentication();             
 app.UseAuthorization();             
 app.UseMiddleware<ExceptionHandlingMiddleware>(); 
