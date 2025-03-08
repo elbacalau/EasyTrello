@@ -9,7 +9,7 @@ const initialState: UserData = {
   email: "",
   phoneNumber: "",
   profilePictureUrl: null,
-  dateCreated: new Date(),
+  dateCreated: null,
   dateModified: null,
   isActive: false,
   boards: [],
@@ -20,7 +20,7 @@ export const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<UserData> ) => {
+    setUser: (state, action: PayloadAction<UserData> ) => {      
       return action.payload;
     },
     clearUser: () => initialState,

@@ -1,10 +1,9 @@
 import { apiLogin, apiUserData } from "@/lib/api/auth";
 import { hideLoader, showLoader } from "@/store/slices/loaderSlice";
+import { setUser } from "@/store/slices/userSlice";
 import { ApiResponse } from "@/types/apiResponse";
 import { useAppDispatch } from "@/types/hooks";
 import { UserData } from "@/types/userData";
-import { useEffect } from "react";
-
 
 interface LoginForm {
   email: string;
@@ -13,25 +12,15 @@ interface LoginForm {
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
-
-  
   const userData = async () => {
-    useEffect(() => {
-      const fetchUserData = async () => {
-        try {
-          const response: ApiResponse<UserData> = await apiUserData();
-          const userData: UserData = response.detail;
-          return response;
-          
-        } catch (error) {
-          
-        }
-      };
-      fetchUserData();
-    }, []);
+    try {
+      const response: ApiResponse<UserData> = await apiUserData();
+      const userData: UserData = response.detail;
 
-
-  }
+      console.log({ userData });
+      dispatch(setUser(userData));
+    } catch (error) {}
+  };
 
   const login = async (loginForm: LoginForm) => {
     try {
@@ -40,12 +29,11 @@ export const useAuth = () => {
         loginForm.email,
         loginForm.password
       );
-      
+
       const token: string = response.detail;
-      if (response.result == 'success' && token) {
-        localStorage.setItem('token', token)
-        userData();
-        // TODO: fetch User data
+      if (response.result == "success" && token) {
+        localStorage.setItem("token", token);
+        await userData();
       }
     } catch (error: any) {
       throw new Error(`Error ${error}`);
@@ -55,5 +43,5 @@ export const useAuth = () => {
     }
   };
 
-  return { login };
+  return { login, userData };
 };
