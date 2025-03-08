@@ -8,7 +8,7 @@ export function DashboardSkeleton() {
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-10 w-32" />
       </div>
-
+      
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i}>
