@@ -15,10 +15,12 @@ export async function fetchAPI<T>(
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
   const { method = "GET", body, headers, cache = "no-store" } = options;
+  const token = localStorage.getItem("token");
   const response = await fetch(`${API_URL}${endpoint}`, {
     method,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,

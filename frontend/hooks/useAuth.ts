@@ -3,9 +3,6 @@ import { hideLoader, showLoader } from "@/store/slices/loaderSlice";
 import { ApiResponse } from "@/types/apiResponse";
 import { useAppDispatch } from "@/types/hooks";
 
-interface LoginResponse {
-  token: string;
-}
 
 interface LoginForm {
   email: string;
@@ -18,17 +15,18 @@ export const useAuth = () => {
   const login = async (loginForm: LoginForm) => {
     try {
       dispatch(showLoader());
-      const response: ApiResponse<LoginResponse> = await apiLogin(
+      const response: ApiResponse<string> = await apiLogin(
         loginForm.email,
         loginForm.password
       );
+      
+      const token: string = response.detail;
+      if (response.result == 'success' && token) {
+        localStorage.setItem('token', token)
+        
+        // TODO: add token intercept to client
 
-      const { token } = response.detail;
-      if (token) {
-        console.log("token: ", { token });
-
-        localStorage.setItem("token", token);
-        // TODO: make the fetch for user data
+        // TODO: fetch User data
       }
     } catch (error: any) {
       throw new Error(`Error ${error}`);
@@ -38,8 +36,5 @@ export const useAuth = () => {
     }
   };
 
-
-  return {login};
+  return { login };
 };
-
-  

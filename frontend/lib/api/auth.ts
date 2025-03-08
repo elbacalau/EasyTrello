@@ -5,5 +5,5 @@ interface LoginResponse {
 }
 
 export const apiLogin = async (email: string, password: string) => {
-  return fetchAPI<LoginResponse>(`/login`, { method: "POST", body: { email, password } });
+  return fetchAPI<string>(`/auth/login`, { method: "POST", body: { email, password } });
 }
