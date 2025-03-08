@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ModeToggle } from "@/components/mode-toggle";
 
-// 📌 Validación con Yup
 const schema = yup.object().shape({
   email: yup.string().email("Correo inválido").required("El email es obligatorio"),
   password: yup.string().min(6, "La contraseña debe tener al menos 6 caracteres").required("La contraseña es obligatoria"),
