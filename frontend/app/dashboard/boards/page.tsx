@@ -18,61 +18,18 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Search, Trello, CheckCircle2, Clock } from "lucide-react"
+import { Board, UserData } from "@/types/userData"
+import { useAppSelector } from "@/types/hooks"
+import { RootState } from "@/store/store"
 
-// Sample board data
-const initialBoards = [
-  {
-    id: 1,
-    name: "Marketing Campaign",
-    description: "Q2 marketing campaign planning and execution",
-    color: "bg-blue-500",
-    tasks: 12,
-    completed: 5,
-  },
-  {
-    id: 2,
-    name: "Product Launch",
-    description: "New product launch timeline and tasks",
-    color: "bg-green-500",
-    tasks: 8,
-    completed: 3,
-  },
-  {
-    id: 3,
-    name: "Website Redesign",
-    description: "Redesign company website for better UX",
-    color: "bg-purple-500",
-    tasks: 15,
-    completed: 10,
-  },
-  {
-    id: 4,
-    name: "Customer Feedback",
-    description: "Collect and analyze customer feedback",
-    color: "bg-amber-500",
-    tasks: 6,
-    completed: 2,
-  },
-  {
-    id: 5,
-    name: "Quarterly Goals",
-    description: "Track progress on quarterly objectives",
-    color: "bg-red-500",
-    tasks: 9,
-    completed: 4,
-  },
-  {
-    id: 6,
-    name: "Team Onboarding",
-    description: "Onboarding process for new team members",
-    color: "bg-teal-500",
-    tasks: 7,
-    completed: 6,
-  },
-]
+
 
 export default function BoardsPage() {
-  const [boards, setBoards] = useState(initialBoards)
+  // TODO: RETURN THE N task FROM BOARD
+  const userData: UserData = useAppSelector((state: RootState) => state.user);
+
+
+  const [boards, setBoards] = useState<Board[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [newBoard, setNewBoard] = useState({
     name: "",
@@ -81,7 +38,8 @@ export default function BoardsPage() {
   })
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const filteredBoards = boards.filter(
+  
+  const filteredBoards = userData.boards.filter(
     (board) =>
       board.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       board.description.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -90,14 +48,8 @@ export default function BoardsPage() {
   const handleCreateBoard = () => {
     if (newBoard.name.trim() === "") return
 
-    const newBoardWithId = {
-      ...newBoard,
-      id: boards.length + 1,
-      tasks: 0,
-      completed: 0,
-    }
-
-    setBoards([...boards, newBoardWithId])
+   
+    setBoards(userData.boards)
     setNewBoard({
       name: "",
       description: "",
