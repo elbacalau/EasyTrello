@@ -1,3 +1,5 @@
+import { ApiResponse } from "@/types/apiResponse";
+
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
@@ -11,7 +13,7 @@ export type FetchOptions = {
 export async function fetchAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
-): Promise<T> {
+): Promise<ApiResponse<T>> {
   const { method = "GET", body, headers, cache = "no-store" } = options;
   const response = await fetch(`${API_URL}${endpoint}`, {
     method,
@@ -23,12 +25,13 @@ export async function fetchAPI<T>(
     cache,
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    const errorData = await response.json();
     throw new Error(
-      errorData.message || `Error ${response.status}: ${response.statusText}`
+      data?.message || `Error ${response.status}: ${response.statusText}`
     );
   }
 
-  return response.json();
+  return data as ApiResponse<T>;
 }

@@ -41,11 +41,8 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormInputs) => {
     setIsLoading(true);
     
-    console.log("Datos enviados:", data);
-    setTimeout(() => {
-      setIsLoading(false);
-      // router.push("/dashboard");
-    }, 1000);
+    
+
   };
 
   return (
