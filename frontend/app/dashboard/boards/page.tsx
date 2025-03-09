@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -13,49 +13,92 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search, Trello, CheckCircle2, Clock } from "lucide-react"
-import { Board, UserData } from "@/types/userData"
-import { useAppSelector } from "@/types/hooks"
-import { RootState } from "@/store/store"
-
-
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Search, Trello, CheckCircle2, Clock } from "lucide-react";
+import { Board, UserData } from "@/types/userData";
+import { useAppSelector } from "@/types/hooks";
+import { RootState } from "@/store/store";
+import { fetchTasksFromBoard } from "@/lib/api/tasks";
+import { Task } from "@/types/tasks";
+import { ApiResponse } from "@/types/apiResponse";
 
 export default function BoardsPage() {
   // TODO: RETURN THE N task FROM BOARD
   const userData: UserData = useAppSelector((state: RootState) => state.user);
 
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const [boards, setBoards] = useState<Board[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
+  const [taskCount, setTasksCount] = useState<Record<number, number>>({});
+  const [completedTaskCount, setCompletedTaskCount] = useState<
+    Record<number, number>
+  >({});
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const taskCounts: Record<number, number> = {};
+      const completedCounts: Record<number, number> = {};
+
+      await Promise.all(
+        userData.boards.map(async (board) => {
+          try {
+            const response: ApiResponse<Task[]> = await fetchTasksFromBoard(
+              board.id
+            );
+            const tasks = response.detail;
+
+            taskCounts[board.id] = tasks.length;
+            completedCounts[board.id] = tasks.filter(
+              (task) => task.completed
+            ).length;
+          } catch (error) {
+            taskCount[board.id] = 0;
+            completedCounts[board.id] = 0;
+          }
+        })
+      );
+      setTasksCount(taskCounts);
+      setCompletedTaskCount(completedCounts);
+    };
+    fetchTasks();
+  }, [userData.boards]);
+
   const [newBoard, setNewBoard] = useState({
     name: "",
     description: "",
     color: "bg-blue-500",
-  })
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  
   const filteredBoards = userData.boards.filter(
     (board) =>
       board.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      board.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      board.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleCreateBoard = () => {
-    if (newBoard.name.trim() === "") return
+    if (newBoard.name.trim() === "") return;
 
-   
-    setBoards(userData.boards)
+    setBoards(userData.boards);
     setNewBoard({
       name: "",
       description: "",
       color: "bg-blue-500",
-    })
-    setIsDialogOpen(false)
+    });
+    setIsDialogOpen(false);
+  };
+
+  function getCompletedTasks(boardId: number): number {
+    return 0;
   }
 
   return (
@@ -83,7 +126,9 @@ export default function BoardsPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Board</DialogTitle>
-                <DialogDescription>Add a new board to organize your tasks.</DialogDescription>
+                <DialogDescription>
+                  Add a new board to organize your tasks.
+                </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -92,7 +137,9 @@ export default function BoardsPage() {
                     id="name"
                     placeholder="Enter board name"
                     value={newBoard.name}
-                    onChange={(e) => setNewBoard({ ...newBoard, name: e.target.value })}
+                    onChange={(e) =>
+                      setNewBoard({ ...newBoard, name: e.target.value })
+                    }
                   />
                 </div>
                 <div className="grid gap-2">
@@ -101,12 +148,19 @@ export default function BoardsPage() {
                     id="description"
                     placeholder="Enter board description"
                     value={newBoard.description}
-                    onChange={(e) => setNewBoard({ ...newBoard, description: e.target.value })}
+                    onChange={(e) =>
+                      setNewBoard({ ...newBoard, description: e.target.value })
+                    }
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="color">Board Color</Label>
-                  <Select value={newBoard.color} onValueChange={(value) => setNewBoard({ ...newBoard, color: value })}>
+                  <Select
+                    value={newBoard.color}
+                    onValueChange={(value) =>
+                      setNewBoard({ ...newBoard, color: value })
+                    }
+                  >
                     <SelectTrigger id="color">
                       <SelectValue placeholder="Select a color" />
                     </SelectTrigger>
@@ -122,7 +176,10 @@ export default function BoardsPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button onClick={handleCreateBoard}>Create</Button>
@@ -133,29 +190,34 @@ export default function BoardsPage() {
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredBoards.map((board) => (
+        {filteredBoards.map((board: Board) => (
           <Link key={board.id} href={`/dashboard/boards/${board.id}`}>
             <Card className="h-full overflow-hidden transition-all hover:shadow-md">
-              <div className={`h-2 w-full ${board.color}`} />
+              <div className={`h-2 w-full ${board.backgroundColor}`} />
               <CardContent className="p-6">
                 <div className="space-y-2">
-                  <h3 className="font-semibold tracking-tight text-xl">{board.name}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{board.description}</p>
+                  <h3 className="font-semibold tracking-tight text-xl">
+                    {board.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {board.description}
+                  </p>
                 </div>
               </CardContent>
               <CardFooter className="p-6 pt-0 flex justify-between">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Trello className="mr-1 h-4 w-4" />
-                  {board.tasks} tasks
+                  {taskCount[board.id]} tasks
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <CheckCircle2 className="mr-1 h-4 w-4" />
-                    {board.completed}
+                    {completedTaskCount[board.id]}
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Clock className="mr-1 h-4 w-4" />
-                    {board.tasks - board.completed}
+                    {taskCount[board.id] - completedTaskCount[board.id]}
+                    
                   </div>
                 </div>
               </CardFooter>
@@ -164,6 +226,5 @@ export default function BoardsPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }
-
