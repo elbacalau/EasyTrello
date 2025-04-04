@@ -7,3 +7,8 @@ export interface ErrorResponse {
   message?: string;
   code?: string;
 }
+
+export enum ApiResponseTypes {
+  success,
+  error
+}

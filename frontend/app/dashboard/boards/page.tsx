@@ -29,10 +29,10 @@ import { useAppSelector } from "@/types/hooks";
 import { RootState } from "@/store/store";
 import { fetchTasksFromBoard } from "@/lib/api/tasks";
 import { Task } from "@/types/tasks";
-import { ApiResponse } from "@/types/apiResponse";
+import { ApiResponse, ApiResponseTypes } from "@/types/apiResponse";
+import { fetchBoards } from "@/lib/api/board";
 
 export default function BoardsPage() {
-  // TODO: RETURN THE N task FROM BOARD
   const userData: UserData = useAppSelector((state: RootState) => state.user);
 
   const [boards, setBoards] = useState<Board[]>([]);
@@ -42,6 +42,19 @@ export default function BoardsPage() {
   const [completedTaskCount, setCompletedTaskCount] = useState<
     Record<number, number>
   >({});
+
+  useEffect(() => {
+    const loadBoards = async () => {  
+      await fetchBoards(userData.id).then((data: ApiResponse<Board[]>) => {
+        console.log(data.detail);
+        
+        if (data.result == ApiResponseTypes.success.toString()) {
+          setBoards(data.detail);
+        }
+      })
+    }
+    loadBoards();
+  }, [])
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -97,9 +110,7 @@ export default function BoardsPage() {
     setIsDialogOpen(false);
   };
 
-  function getCompletedTasks(boardId: number): number {
-    return 0;
-  }
+  
 
   return (
     <div className="space-y-6">
@@ -188,6 +199,7 @@ export default function BoardsPage() {
           </Dialog>
         </div>
       </div>
+
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filteredBoards.map((board: Board) => (

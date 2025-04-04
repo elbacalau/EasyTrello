@@ -15,14 +15,24 @@ interface LoginForm {
 export const useAuth = () => {
   const dispatch = useAppDispatch();
   
-  const userData = async () => {
+  const userData = async (): Promise<UserData | null> => {
     try {
+      dispatch(showLoader());
       const response: ApiResponse<UserData> = await apiUserData();
-      const userData: UserData = response.detail;
-
-      console.log({ userData });
-      dispatch(setUser(userData));
-    } catch (error) {}
+      
+      if (response.result === "success" && response.detail) {
+        const userData: UserData = response.detail;
+        console.log("Datos de usuario cargados:", userData);
+        dispatch(setUser(userData));
+        return userData;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error al obtener datos del usuario:", error);
+      return null;
+    } finally {
+      dispatch(hideLoader());
+    }
   };
 
   const login = async (loginForm: LoginForm): Promise<boolean> => {
@@ -33,16 +43,18 @@ export const useAuth = () => {
         loginForm.password
       );
 
-      const token: string = response.detail;
-      if (response.result == "success" && token) {
+      if (response.result === "success" && response.detail) {
+        const token: string = response.detail;
+        console.log("Token obtenido:", token);
         localStorage.setItem("token", token);
-        await userData();
-        return true
+        
+        const user = await userData();
+        return user !== null;
       }
-      return false
+      return false;
     } catch (error: any) {
-      throw new Error(`Error ${error}`);
-      console.error(error);
+      console.error("Error en el login:", error);
+      return false;
     } finally {
       dispatch(hideLoader());
     }
