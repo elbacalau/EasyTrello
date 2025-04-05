@@ -24,64 +24,45 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Search, Trello, CheckCircle2, Clock } from "lucide-react";
-import { Board, UserData } from "@/types/userData";
+import { Board, BoardStats, UserData } from "@/types/userData";
 import { useAppSelector } from "@/types/hooks";
 import { RootState } from "@/store/store";
 import { fetchTasksFromBoard } from "@/lib/api/tasks";
 import { Task } from "@/types/tasks";
 import { ApiResponse, ApiResponseTypes } from "@/types/apiResponse";
-import { fetchBoards } from "@/lib/api/board";
+import { fetchBoards, fetchBoardStats } from "@/lib/api/board";
 
 export default function BoardsPage() {
   const userData: UserData = useAppSelector((state: RootState) => state.user);
 
   const [boards, setBoards] = useState<Board[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [taskStats, setTaskStats] = useState<Record<number, { completed: number, pending: number }>>({});
 
-  const [taskCount, setTasksCount] = useState<Record<number, number>>({});
-  const [completedTaskCount, setCompletedTaskCount] = useState<
-    Record<number, number>
-  >({});
 
   useEffect(() => {
-    const loadBoards = async () => {  
-      await fetchBoards(userData.id).then((data: ApiResponse<Board[]>) => {
-        if (data.result == ApiResponseTypes.success.toString()) {
-          setBoards(data.detail);
+    const loadBoardsAndStats = async () => {
+      const boardsRes = await fetchBoards(userData.id);
+      const boardsFetched = boardsRes.detail;
+      setBoards(boardsFetched);
+
+      const stats: Record<number, { completed: number; pending: number }> = {};
+
+      for (const board of boardsFetched) {
+        const { result, detail }: ApiResponse<BoardStats> = await fetchBoardStats(board.id);
+        if (result === ApiResponseTypes[ApiResponseTypes.success]) {
+          stats[board.id] = {
+            completed: detail.completedTasks,
+            pending: detail.pendingTasks,
+          };
         }
-      })
-    }
-    loadBoards();
-  }, [])
-
-  useEffect(() => {
-    const fetchTasks = async () => {
-      const taskCounts: Record<number, number> = {};
-      const completedCounts: Record<number, number> = {};
-
-      await Promise.all(
-        userData.boards.map(async (board) => {
-          try {
-            const response: ApiResponse<Task[]> = await fetchTasksFromBoard(
-              board.id
-            );
-            const tasks = response.detail;
-
-            taskCounts[board.id] = tasks.length;
-            completedCounts[board.id] = tasks.filter(
-              (task) => task.completed
-            ).length;
-          } catch (error) {
-            taskCount[board.id] = 0;
-            completedCounts[board.id] = 0;
-          }
-        })
-      );
-      setTasksCount(taskCounts);
-      setCompletedTaskCount(completedCounts);
+      }
+      setTaskStats(stats);
     };
-    fetchTasks();
-  }, [userData.boards]);
+
+    loadBoardsAndStats();
+  }, []);
+
 
   const [newBoard, setNewBoard] = useState({
     name: "",
@@ -90,7 +71,7 @@ export default function BoardsPage() {
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const filteredBoards = userData.boards.filter(
+  const filteredBoards = boards.filter(
     (board) =>
       board.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       board.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -107,8 +88,6 @@ export default function BoardsPage() {
     });
     setIsDialogOpen(false);
   };
-
-  
 
   return (
     <div className="space-y-6">
@@ -217,17 +196,25 @@ export default function BoardsPage() {
               <CardFooter className="p-6 pt-0 flex justify-between">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Trello className="mr-1 h-4 w-4" />
-                  {taskCount[board.id]} tasks
+                  {/* TASK COUNT */}
+                  {(() => {
+                    const total =
+                      (taskStats[board.id]?.completed ?? 0) + (taskStats[board.id]?.pending ?? 0);
+                    return `${total} ${total === 1 ? "task" : "tasks"}`;
+                  })()}
+
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <CheckCircle2 className="mr-1 h-4 w-4" />
-                    {completedTaskCount[board.id]}
+                    {/* COMPLETED TASK COUNT */}
+                    {taskStats[board.id]?.completed || 0}
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Clock className="mr-1 h-4 w-4" />
-                    {taskCount[board.id] - completedTaskCount[board.id]}
-                    
+                    {/* PENDING TASK */}
+                    {taskStats[board.id]?.pending || 0}
+
                   </div>
                 </div>
               </CardFooter>
