@@ -168,9 +168,9 @@ namespace backend.src.Service
                 .FirstOrDefaultAsync(b => b.Id == boardId)
                 ?? throw new ArgumentException("No boards found");
 
-            BoardColumn boardColumn = board.Columns.FirstOrDefault(bc => bc.Id == columnId) 
+            BoardColumn boardColumn = board.Columns.FirstOrDefault(bc => bc.Id == columnId)
                 ?? throw new ArgumentException("No column found");
-            
+
             _context.BoardColumns.Remove(boardColumn);
             await _context.SaveChangesAsync();
         }
@@ -193,7 +193,7 @@ namespace backend.src.Service
                 .Where(b => b.CreatedByUserId == userId)
                 .ProjectTo<BoardResponse>(_mapper.ConfigurationProvider)
                 .ToListAsync();
-                
+
 
 
             return boards;
@@ -203,13 +203,13 @@ namespace backend.src.Service
         {
             try
             {
-               
+
                 var board = await _context.Boards
                     .AsNoTracking()
                     .FirstOrDefaultAsync(b => b.Id == boardId)
                     ?? throw new ArgumentException("Tablero no encontrado");
 
-                
+
                 var columns = await _context.BoardColumns
                     .AsNoTracking()
                     .Where(c => c.BoardId == boardId)
@@ -221,7 +221,7 @@ namespace backend.src.Service
                     .ToListAsync();
 
                 var columnResponses = _mapper.Map<List<BoardColumnResponse>>(columns);
-                
+
                 return columnResponses;
             }
             catch (Exception ex)
@@ -247,7 +247,7 @@ namespace backend.src.Service
                     ?? throw new ArgumentException("Columna no encontrada en el tablero especificado");
 
                 var columnResponse = _mapper.Map<BoardColumnResponse>(column);
-                
+
                 return columnResponse;
             }
             catch (Exception ex)
@@ -255,6 +255,43 @@ namespace backend.src.Service
                 Console.WriteLine($"Error en GetBoardColumn: {ex.Message}");
                 throw;
             }
+        }
+
+        public async Task<BoardStatsResponse> GetBoardStats(int boardId)
+        {
+            var board = await _context.Boards
+                .FirstOrDefaultAsync(b => b.Id == boardId)
+                ?? throw new ArgumentException("Tablero no encontrado");
+
+            var columns = await _context.BoardColumns
+                .Where(c => c.BoardId == boardId)
+                .Include(c => c.Tasks)
+                .AsNoTracking()
+                .ToListAsync();
+
+            int pendingTasks = 0;
+            int completedTasks = 0;
+
+            foreach (var column in columns)
+            {
+                foreach (var task in column.Tasks)
+                {
+                    if (task.Completed)
+                    {
+                        completedTasks++;
+                    }
+                    else
+                    {
+                        pendingTasks++;
+                    }
+                }
+            }
+
+            return new BoardStatsResponse
+            {
+                PendingTasks = pendingTasks,
+                CompletedTasks = completedTasks
+            };
         }
     }
 }

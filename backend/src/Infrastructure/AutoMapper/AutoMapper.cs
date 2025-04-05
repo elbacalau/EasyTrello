@@ -28,8 +28,7 @@ namespace backend.src.Infrastructure.Mapper
                     FirstName = bu.User.FirstName,
                     LastName = bu.User.LastName,
                     Email = bu.User.Email,
-                    PhoneNumber = bu.User.PhoneNumber!,
-                    Role = bu.Role.ToString()
+                    PhoneNumber = bu.User.PhoneNumber
                 })))
                 .ForMember(dest => dest.BoardColumns, opt => opt.MapFrom(src => src.Columns.Select(c => new BoardColumnResponse
                 {
@@ -43,10 +42,12 @@ namespace backend.src.Infrastructure.Mapper
 
             // map user to userresponse (fixing missing type map issue)
             CreateMap<User, UserResponse>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber));
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive));
 
             // map user to userdataresponse
             CreateMap<User, UserDataResponse>()

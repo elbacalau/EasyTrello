@@ -13,6 +13,8 @@ namespace backend.src.Controllers
     public class UserController(UserService userService) : ControllerBase
     {
         private readonly UserService _userService = userService;
+        
+        
 
         // endpoint para crear el usuario
         [HttpPost]
@@ -51,6 +53,18 @@ namespace backend.src.Controllers
             {
                 Result = "success",
                 Detail = user
+            });
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _userService.GetAllUsersAsync();
+            return Ok(new ApiResponse<List<UserResponse>>
+            {
+                Result = "success", 
+                Detail = users
             });
         }
 

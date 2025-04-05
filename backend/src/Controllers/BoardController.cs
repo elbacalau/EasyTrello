@@ -139,5 +139,16 @@ namespace backend.src.Controllers
             });
         }
 
+        [HttpGet("{boardId}/stats")]
+        public async Task<IActionResult> GetBoardStats(int boardId)
+        {
+            var stats = await _boardService.GetBoardStats(boardId);
+            return Ok(new ApiResponse<BoardStatsResponse>
+            {
+                Result = "success",
+                Detail = stats
+            });
+        }
+
     }
 }

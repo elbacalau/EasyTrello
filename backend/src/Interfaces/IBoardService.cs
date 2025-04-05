@@ -15,5 +15,6 @@ namespace backend.src.Interfaces
         Task DeleteColumn(int boardId, int columnId);
         Task<List<BoardColumnResponse>> GetBoardColumns(int boardId);
         Task<BoardColumnResponse> GetBoardColumn(int boardId, int columnId);
+        Task<BoardStatsResponse> GetBoardStats(int boardId);
     }
 }

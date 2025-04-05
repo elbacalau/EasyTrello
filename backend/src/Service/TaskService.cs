@@ -129,7 +129,6 @@ namespace backend.src.Service
             var targetColumn = await _context.BoardColumns
                 .FirstOrDefaultAsync(c => c.Id == targetColumnId && c.BoardId == boardId)
                 ?? throw new ArgumentException("Columna de destino no encontrada en el tablero");
-
             task.BoardColumnId = targetColumnId;
             await _context.SaveChangesAsync();
 

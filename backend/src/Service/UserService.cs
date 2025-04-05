@@ -13,8 +13,6 @@ namespace backend.src.Service
 {
     public class UserService(AppDbContext context, Functions functions, IMapper mapper, IHttpContextAccessor httpContextAccessor) : IUserService
     {
-
-        // DI
         private readonly AppDbContext _context = context;
         private readonly Functions _functions = functions;
         private readonly IMapper _mapper = mapper;
@@ -28,16 +26,20 @@ namespace backend.src.Service
             try
             {
                 user.Password = _functions.EncryptPassword(user.Password);
+                
+                user.DateCreated = DateTime.UtcNow;
+                user.IsActive = true; 
+                
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                
+                return user;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Error en CreateUserAsync: {ex.Message}");
                 throw;
             }
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return user;
         }
 
         public async Task<UserResponse> GetUserByIdAsync(int id)
@@ -45,15 +47,7 @@ namespace backend.src.Service
             User user = await _context.Users.FindAsync(id)
                 ?? throw new ArgumentException("User not found");
 
-            BoardUser boardUser = await _context.BoardUsers.FirstOrDefaultAsync(bu => bu.UserId == id)
-                ?? throw new ArgumentException("User not found");
-
-            string role = Enum.GetName(typeof(BoardRole), boardUser.Role)
-                ?? throw new ArgumentException("Invalid Role"); ;
-
             UserResponse userResponse = _mapper.Map<UserResponse>(user);
-            userResponse.Role = role;
-
             return userResponse;
         }
 
@@ -73,5 +67,10 @@ namespace backend.src.Service
             return user;
         }
 
+        public async Task<List<UserResponse>> GetAllUsersAsync()
+        {
+            var users = await _context.Users.ToListAsync();
+            return _mapper.Map<List<UserResponse>>(users);
+        }
     }
 }
