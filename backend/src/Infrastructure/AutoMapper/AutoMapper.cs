@@ -25,15 +25,18 @@ namespace backend.src.Infrastructure.Mapper
             CreateMap<Board, BoardResponse>()
                 .ForMember(dest => dest.AssignedUsers, opt => opt.MapFrom(src => src.BoardUsers.Select(bu => new UserResponse
                 {
+                    Id = bu.UserId,
                     FirstName = bu.User.FirstName,
                     LastName = bu.User.LastName,
                     Email = bu.User.Email,
-                    PhoneNumber = bu.User.PhoneNumber
+                    PhoneNumber = bu.User.PhoneNumber,
+                    IsActive = bu.User.IsActive
                 })))
                 .ForMember(dest => dest.BoardColumns, opt => opt.MapFrom(src => src.Columns.Select(c => new BoardColumnResponse
                 {
                     Id = c.Id,
-                    ColumnName = c.ColumnName
+                    ColumnName = c.ColumnName,
+                    BoardId = c.BoardId
                 })));
 
             // map boardcolumn to boardcolumnresponse

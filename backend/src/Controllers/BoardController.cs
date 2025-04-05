@@ -26,7 +26,7 @@ namespace backend.src.Controllers
         }
 
         // get boards from user id
-        [HttpGet("{id}")]
+        [HttpGet("user/{id}")]
         public async Task<IActionResult> GetBoard(int id)
         {
             List<BoardResponse> boards = await _boardService.GetBoards(id);
@@ -147,6 +147,19 @@ namespace backend.src.Controllers
             {
                 Result = "success",
                 Detail = stats
+            });
+        }
+
+        
+        [HttpGet("all-with-users")]
+        [Authorize] 
+        public async Task<IActionResult> GetAllBoardsWithUsers()
+        {
+            var boardsWithUsers = await _boardService.GetAllBoardsWithUsers();
+            return Ok(new ApiResponse<List<BoardResponse>>
+            {
+                Result = "success",
+                Detail = boardsWithUsers
             });
         }
 

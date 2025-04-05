@@ -36,3 +36,8 @@ export interface BoardColumn {
   id: number;
   columnName: string;
 }
+
+export interface BoardStats {
+  pendingTasks: number;
+  completedTasks: number;
+}

@@ -186,17 +186,22 @@ namespace backend.src.Service
 
         public async Task<List<BoardResponse>> GetBoards(int userId)
         {
-            // found user
-            var user = _context.Users.FirstOrDefault(u => u.Id == userId) ?? throw new UnauthorizedAccessException("User not found");
 
-            List<BoardResponse> boards = await _context.Boards
-                .Where(b => b.CreatedByUserId == userId)
-                .ProjectTo<BoardResponse>(_mapper.ConfigurationProvider)
+            var user = await _context.Users.FindAsync(userId)
+                ?? throw new UnauthorizedAccessException("Usuario no encontrado");
+
+            var boards = await _context.Boards
+                .AsNoTracking()
+                .Where(b => b.CreatedByUserId == userId || b.BoardUsers.Any(bu => bu.UserId == userId))
+                .Include(b => b.BoardUsers)
+                    .ThenInclude(bu => bu.User)
+                .Include(b => b.Columns)
                 .ToListAsync();
 
 
+            var boardResponses = _mapper.Map<List<BoardResponse>>(boards);
 
-            return boards;
+            return boardResponses;
         }
 
         public async Task<List<BoardColumnResponse>> GetBoardColumns(int boardId)
@@ -292,6 +297,28 @@ namespace backend.src.Service
                 PendingTasks = pendingTasks,
                 CompletedTasks = completedTasks
             };
+        }
+
+        public async Task<List<BoardResponse>> GetAllBoardsWithUsers()
+        {
+            try
+            {
+                var boards = await _context.Boards
+                    .AsNoTracking()
+                    .Include(b => b.BoardUsers)
+                        .ThenInclude(bu => bu.User)
+                    .Include(b => b.Columns)
+                    .ToListAsync();
+
+                var boardResponses = _mapper.Map<List<BoardResponse>>(boards);
+
+                return boardResponses;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GetAllBoardsWithUsers: {ex.Message}");
+                throw;
+            }
         }
     }
 }
