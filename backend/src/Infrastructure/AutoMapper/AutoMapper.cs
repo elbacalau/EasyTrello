@@ -38,7 +38,8 @@ namespace backend.src.Infrastructure.Mapper
                 })));
 
             // map boardcolumn to boardcolumnresponse
-            CreateMap<BoardColumn, BoardColumnResponse>();
+            CreateMap<BoardColumn, BoardColumnResponse>()
+                .ForMember(dest => dest.Tasks, opt => opt.MapFrom(src => src.Tasks));
 
             // map user to userresponse (fixing missing type map issue)
             CreateMap<User, UserResponse>()
@@ -54,6 +55,7 @@ namespace backend.src.Infrastructure.Mapper
             // map taskmodel to taskresponse
             CreateMap<TaskModel, TaskResponse>()
                 .ForMember(dest => dest.BoardName, opt => opt.MapFrom(src => src.Board!.Name))
+                .ForMember(dest => dest.ColumnName, opt => opt.MapFrom(src => src.BoardColumn!.ColumnName))
                 .ForMember(dest => dest.AssignedUserName, opt => opt.MapFrom(src => $"{src.AssignedUser!.FirstName} {src.AssignedUser.LastName}"))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
@@ -85,6 +87,8 @@ namespace backend.src.Infrastructure.Mapper
 
             // map taskmodel to taskresponse (duplicated in original, keeping the relevant parts)
             CreateMap<TaskModel, TaskResponse>()
+                .ForMember(dest => dest.BoardName, opt => opt.MapFrom(src => src.Board!.Name))
+                .ForMember(dest => dest.ColumnName, opt => opt.MapFrom(src => src.BoardColumn!.ColumnName))
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments));
 
             // map taskcomment to taskcommentresponse (duplicated, merged into one)

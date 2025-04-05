@@ -19,13 +19,25 @@ namespace backend.src.Service
         private readonly AppDbContext _context = context;
         private readonly IMapper _mapper = mapper;
 
-        public async Task<TaskResponse> AssignUserToTask(int taskId, [FromBody] TaskAssignUserRequest request, int boardId)
+        public async Task<List<TaskResponse>> GetTasksByColumn(int boardId, int columnId)
         {
-            // find task
-            TaskModel task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.BoardId == boardId) ?? throw new ArgumentException("Task not found in the specified board");
+            
+            var column = await _context.BoardColumns
+                .Include(c => c.Tasks)
+                .FirstOrDefaultAsync(c => c.Id == columnId && c.BoardId == boardId)
+                ?? throw new ArgumentException("Columna no encontrada en el tablero especificado");
 
-            // found new user to assign task
-            User newUser = await _context.Users.FindAsync(request.UserId) ?? throw new ArgumentException("User not found"); ;
+            return _mapper.Map<List<TaskResponse>>(column.Tasks);
+        }
+
+        public async Task<TaskResponse> AssignUserToTask(int taskId, [FromBody] TaskAssignUserRequest request, int boardId, int columnId)
+        {
+            TaskModel task = await _context.Tasks
+                .FirstOrDefaultAsync(t => t.Id == taskId && t.BoardColumnId == columnId)
+                ?? throw new ArgumentException("Tarea no encontrada en la columna especificada");
+
+            User newUser = await _context.Users.FindAsync(request.UserId)
+                ?? throw new ArgumentException("Usuario no encontrado");
 
             task.AssignedUser = newUser;
             task.AssignedUserId = request.UserId;
@@ -35,10 +47,11 @@ namespace backend.src.Service
             return _mapper.Map<TaskResponse>(task);
         }
 
-        public async Task<TaskResponse> CompleteTask(int taskId, [FromBody] CompleteTaskRequest request, int boardId)
+        public async Task<TaskResponse> CompleteTask(int taskId, [FromBody] CompleteTaskRequest request, int boardId, int columnId)
         {
-            // find task
-            TaskModel task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.BoardId == boardId) ?? throw new ArgumentException("Task not found in the specified board");
+            TaskModel task = await _context.Tasks
+                .FirstOrDefaultAsync(t => t.Id == taskId && t.BoardColumnId == columnId)
+                ?? throw new ArgumentException("Tarea no encontrada en la columna especificada");
 
             task.Completed = request.Complete;
             await _context.SaveChangesAsync();
@@ -48,14 +61,18 @@ namespace backend.src.Service
 
         public async Task<TaskResponse> CreateTask([FromBody] TaskRequest request)
         {
-            // verify the boardId
-            var board = await _context.Boards.FindAsync(request.BoardId) ?? throw new ArgumentException("Board not found to create the task");
+            var board = await _context.Boards.FindAsync(request.BoardId)
+                ?? throw new ArgumentException("Tablero no encontrado");
 
-            // verify the name of the task
-            bool taskExists = await _context.Tasks.AnyAsync(t => t.BoardId == request.BoardId && t.Name == request.Name);
-            if (taskExists) throw new ArgumentException("Cannot repeat the name");
+            var column = await _context.BoardColumns
+                .FirstOrDefaultAsync(c => c.Id == request.BoardColumnId && c.BoardId == request.BoardId)
+                ?? throw new ArgumentException("Columna no encontrada en el tablero especificado");
 
-
+            bool taskExists = await _context.Tasks
+                .AnyAsync(t => t.BoardColumnId == request.BoardColumnId && t.Name == request.Name);
+            
+            if (taskExists)
+                throw new ArgumentException("Ya existe una tarea con ese nombre en la columna");
 
             TaskModel newTask = _mapper.Map<TaskModel>(request);
 
@@ -63,37 +80,60 @@ namespace backend.src.Service
             await _context.SaveChangesAsync();
 
             return _mapper.Map<TaskResponse>(newTask);
-
         }
 
-        public async Task DeleteTasks(int boardId, int? taskId)
+        public async Task DeleteTask(int boardId, int columnId, int taskId)
         {
-            List<TaskModel> boardTask = await _context.Tasks.Where(t => t.BoardId == boardId).ToListAsync();
-            if (taskId == null)
-            {
-                _context.Tasks.RemoveRange(boardTask);
-            }
+            var task = await _context.Tasks
+                .FirstOrDefaultAsync(t => t.Id == taskId && t.BoardColumnId == columnId)
+                ?? throw new ArgumentException("Tarea no encontrada en la columna especificada");
 
-            TaskModel removeTask = boardTask.FirstOrDefault(t => t.Id == taskId)!;
+            _context.Tasks.Remove(task);
+            await _context.SaveChangesAsync();
+        }
 
-            _context.Tasks.Remove(removeTask);
+        public async Task DeleteAllTasksFromColumn(int boardId, int columnId)
+        {
+            var column = await _context.BoardColumns
+                .Include(c => c.Tasks)
+                .FirstOrDefaultAsync(c => c.Id == columnId && c.BoardId == boardId)
+                ?? throw new ArgumentException("Columna no encontrada en el tablero especificado");
+
+            _context.Tasks.RemoveRange(column.Tasks);
             await _context.SaveChangesAsync();
         }
 
         public async Task<List<TaskResponse>> FindTask([FromBody] FindTaskRequest request)
         {
-
-            List<TaskModel> tasks = await _context.Tasks
+            var query = _context.Tasks
                 .Include(t => t.Comments)
                     .ThenInclude(c => c.User)
-                .Where(t => t.BoardId == request.BoardId)
-                .ToListAsync();
+                .Where(t => t.BoardColumnId == request.BoardColumnId);
+
             if (request.TaskId != null)
             {
-                return _mapper.Map<List<TaskResponse>>(tasks.Where(t => t.Id == request.TaskId).ToList());
+                query = query.Where(t => t.Id == request.TaskId);
             }
 
+            var tasks = await query.ToListAsync();
             return _mapper.Map<List<TaskResponse>>(tasks);
+        }
+
+        public async Task<TaskResponse> MoveTaskToColumn(int taskId, int boardId, int sourceColumnId, int targetColumnId)
+        {
+         
+            var task = await _context.Tasks
+                .FirstOrDefaultAsync(t => t.Id == taskId && t.BoardColumnId == sourceColumnId)
+                ?? throw new ArgumentException("Tarea no encontrada en la columna de origen");
+
+            var targetColumn = await _context.BoardColumns
+                .FirstOrDefaultAsync(c => c.Id == targetColumnId && c.BoardId == boardId)
+                ?? throw new ArgumentException("Columna de destino no encontrada en el tablero");
+
+            task.BoardColumnId = targetColumnId;
+            await _context.SaveChangesAsync();
+
+            return _mapper.Map<TaskResponse>(task);
         }
     }
 }

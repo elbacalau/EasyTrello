@@ -1,9 +1,8 @@
 using backend.Models;
-
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.src.Models
 {
-
     public class Board
     {
         public int Id { get; set; }
@@ -20,10 +19,14 @@ namespace backend.src.Models
         public string? BackgroundColor { get; set; }
         public DateTime? DeletedAt { get; set; }
 
-        public ICollection<TaskModel>? Tasks { get; set; } = [];
+        [NotMapped]
+        public ICollection<TaskModel>? Tasks 
+        { 
+            get { return Columns?.SelectMany(c => c.Tasks).ToList(); } 
+        }
+        
         public ICollection<BoardUser> BoardUsers { get; set; } = [];
         public ICollection<BoardColumn> Columns { get; set; } = [];
-
     }
 }
 

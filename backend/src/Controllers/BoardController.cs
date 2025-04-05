@@ -117,6 +117,27 @@ namespace backend.src.Controllers
             return NoContent();
         }
 
+        [HttpGet("{boardId}/columns")]
+        public async Task<IActionResult> GetBoardColumns(int boardId)
+        {
+            var columns = await _boardService.GetBoardColumns(boardId);
+            return Ok(new ApiResponse<List<BoardColumnResponse>>
+            {
+                Result = "success",
+                Detail = columns
+            });
+        }
+
+        [HttpGet("{boardId}/columns/{columnId}")]
+        public async Task<IActionResult> GetBoardColumn(int boardId, int columnId)
+        {
+            var column = await _boardService.GetBoardColumn(boardId, columnId);
+            return Ok(new ApiResponse<BoardColumnResponse>
+            {
+                Result = "success",
+                Detail = column
+            });
+        }
 
     }
 }

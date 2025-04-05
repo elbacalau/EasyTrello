@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using backend.Models;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.src.Models
 {
@@ -19,9 +20,17 @@ namespace backend.src.Models
         public bool Completed { get; set; } = false;
         public DateTime? DeletedAt { get; set; }
 
-        // Relationships
-        public int BoardId { get; set; }
+        public int BoardColumnId { get; set; }
+        
+        [ForeignKey("BoardColumnId")]
         [JsonIgnore]
+        public BoardColumn? BoardColumn { get; set; }
+
+       
+        public int BoardId { get; set; }
+        
+        [JsonIgnore]
+        [ForeignKey("BoardId")]
         public Board? Board { get; set; }
 
         public int AssignedUserId { get; set; }

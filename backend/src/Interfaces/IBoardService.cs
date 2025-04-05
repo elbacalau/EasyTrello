@@ -13,5 +13,7 @@ namespace backend.src.Interfaces
         Task ChangeUserRole(int userId, int boardId, int targetUserId, string newRole);
         Task<AddColumnRequest> AddColumn(int boardId, AddColumnRequest request);
         Task DeleteColumn(int boardId, int columnId);
+        Task<List<BoardColumnResponse>> GetBoardColumns(int boardId);
+        Task<BoardColumnResponse> GetBoardColumn(int boardId, int columnId);
     }
 }

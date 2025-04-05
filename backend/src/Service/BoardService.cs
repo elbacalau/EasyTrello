@@ -199,7 +199,62 @@ namespace backend.src.Service
             return boards;
         }
 
+        public async Task<List<BoardColumnResponse>> GetBoardColumns(int boardId)
+        {
+            try
+            {
+               
+                var board = await _context.Boards
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(b => b.Id == boardId)
+                    ?? throw new ArgumentException("Tablero no encontrado");
 
+                
+                var columns = await _context.BoardColumns
+                    .AsNoTracking()
+                    .Where(c => c.BoardId == boardId)
+                    .Include(c => c.Tasks)
+                        .ThenInclude(t => t.Comments)
+                            .ThenInclude(c => c.User)
+                    .Include(c => c.Tasks)
+                        .ThenInclude(t => t.AssignedUser)
+                    .ToListAsync();
 
+                var columnResponses = _mapper.Map<List<BoardColumnResponse>>(columns);
+                
+                return columnResponses;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GetBoardColumns: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<BoardColumnResponse> GetBoardColumn(int boardId, int columnId)
+        {
+            try
+            {
+                var column = await _context.BoardColumns
+                    .AsNoTracking()
+                    .Where(c => c.Id == columnId && c.BoardId == boardId)
+                    .Include(c => c.Tasks)
+                        .ThenInclude(t => t.Comments)
+                            .ThenInclude(c => c.User)
+                    .Include(c => c.Tasks)
+                        .ThenInclude(t => t.AssignedUser)
+                    .FirstOrDefaultAsync()
+                    ?? throw new ArgumentException("Columna no encontrada en el tablero especificado");
+
+                var columnResponse = _mapper.Map<BoardColumnResponse>(column);
+                
+                return columnResponse;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en GetBoardColumn: {ex.Message}");
+                throw;
+            }
+        }
     }
 }

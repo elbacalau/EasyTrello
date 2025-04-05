@@ -14,14 +14,14 @@ namespace backend.src.DTOs.TaskDTOs
         public string Priority { get; set; } = null!;
         public bool Completed { get; set; }
 
+        public int BoardColumnId { get; set; }
+        public string? ColumnName { get; set; }
 
         public int BoardId { get; set; }
         public string? BoardName { get; set; }
 
-
         public int AssignedUserId { get; set; }
         public string? AssignedUserName { get; set; }
-
 
         public List<string> Labels { get; set; } = [];
         public List<TaskCommentResponse> Comments { get; set; } = [];

@@ -46,8 +46,6 @@ export default function BoardsPage() {
   useEffect(() => {
     const loadBoards = async () => {  
       await fetchBoards(userData.id).then((data: ApiResponse<Board[]>) => {
-        console.log(data.detail);
-        
         if (data.result == ApiResponseTypes.success.toString()) {
           setBoards(data.detail);
         }
