@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Providers from "@/components/state-provider";
 
 import "./globals.css";
+import { SessionInitializer } from "@/components/sesion-initializer";
 
 
 
@@ -31,7 +32,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Providers>{children}</Providers>
+          <Providers>
+            <SessionInitializer/>
+            {children}
+            </Providers>
         </ThemeProvider>
       </body>
     </html>

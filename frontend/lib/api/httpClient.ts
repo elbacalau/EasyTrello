@@ -56,14 +56,7 @@ export async function fetchAPI<T>(
         })
       );
     }
-    
-    if (response.status === 401) {
-      if (typeof window !== "undefined") {
-        console.log("Sesión expirada. Redirigiendo al login...");
-        window.location.href = "/login";
-      }
-    }
-    
+  
     throw new Error(errorMessage);
   }
 

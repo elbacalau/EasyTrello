@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,6 +20,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, MoreHorizontal, Calendar, User, Tag } from "lucide-react"
+import { fetchBoardColumns } from "@/lib/api/board"
+import { userAgent } from "next/server"
+import { Params } from "next/dist/shared/lib/router/utils/route-matcher"
+import { ApiResponseTypes } from "@/types/apiResponse"
 
 // Sample data for the board
 const boardData = {
@@ -168,7 +172,7 @@ const teamMembers = [
 ]
 
 export default function BoardPage() {
-  const params = useParams()
+  const params: Params = useParams()
   const [columns, setColumns] = useState(initialColumns)
   const [selectedTask, setSelectedTask] = useState(null)
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
@@ -183,6 +187,21 @@ export default function BoardPage() {
   const [newComment, setNewComment] = useState("")
   const [draggedTask, setDraggedTask] = useState(null)
   const [draggedColumn, setDraggedColumn] = useState(null)
+
+
+  useEffect(() => {
+    const loadColumns = async () => {
+      const { result, detail } = await fetchBoardColumns(parseInt(params.id))
+      if (result === ApiResponseTypes[ApiResponseTypes.success]) {
+        console.log({ detail });
+        setColumns(detail)
+      }
+    }
+    loadColumns();
+  }, [params.id])
+  
+
+
 
   const handleDragStart = (task, columnId) => {
     setDraggedTask(task)
@@ -281,7 +300,6 @@ export default function BoardPage() {
     setColumns(updatedColumns)
     setNewComment("")
 
-    // Update the selected task to show the new comment
     const updatedTask = updatedColumns.flatMap((col) => col.tasks).find((task) => task.id === selectedTask.id)
 
     setSelectedTask(updatedTask)

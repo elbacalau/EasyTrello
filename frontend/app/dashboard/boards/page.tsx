@@ -41,8 +41,10 @@ export default function BoardsPage() {
 
 
   useEffect(() => {
+    if (!userData.id) return;
     const loadBoardsAndStats = async () => {
-      const boardsRes = await fetchBoards(userData.id);
+      
+      const boardsRes = await fetchBoards(userData.id!);
       const boardsFetched = boardsRes.detail;
       setBoards(boardsFetched);
 
@@ -61,7 +63,7 @@ export default function BoardsPage() {
     };
 
     loadBoardsAndStats();
-  }, []);
+  }, [userData.id]);
 
 
   const [newBoard, setNewBoard] = useState({
@@ -206,12 +208,12 @@ export default function BoardsPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <CheckCircle2 className="mr-1 h-4 w-4" />
+                    <CheckCircle2 className="mr-1 h-4 w-4" color="green" />
                     {/* COMPLETED TASK COUNT */}
                     {taskStats[board.id]?.completed || 0}
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <Clock className="mr-1 h-4 w-4" />
+                    <Clock className="mr-1 h-4 w-4" color="grey"/>
                     {/* PENDING TASK */}
                     {taskStats[board.id]?.pending || 0}
 

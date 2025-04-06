@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using backend.Models;
+using backend.src.DTOs;
 using backend.src.DTOs.BoardDTOs;
 using backend.src.Middleware;
 using backend.src.Models;
@@ -160,6 +162,18 @@ namespace backend.src.Controllers
             {
                 Result = "success",
                 Detail = boardsWithUsers
+            });
+        }
+
+        [HttpGet("{boardId}/assignedUsers")]
+        [Authorize]
+        public async Task<IActionResult> GetAssignedUsersFromBoard(int boardId)
+        {
+            List<UserResponse> assignedUsers = await _boardService.GetAssignedUsers(boardId);
+            return Ok(new ApiResponse<List<UserResponse>>
+            {
+                Result = "success",
+                Detail = assignedUsers
             });
         }
 

@@ -1,4 +1,5 @@
 using backend.Models;
+using backend.src.DTOs;
 using backend.src.DTOs.BoardDTOs;
 namespace backend.src.Interfaces
 {
@@ -16,5 +17,6 @@ namespace backend.src.Interfaces
         Task<List<BoardColumnResponse>> GetBoardColumns(int boardId);
         Task<BoardColumnResponse> GetBoardColumn(int boardId, int columnId);
         Task<BoardStatsResponse> GetBoardStats(int boardId);
+        Task<List<UserResponse>> GetAssignedUsers(int boardId);
     }
 }

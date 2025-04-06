@@ -3,6 +3,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using backend.Data;
 using backend.Models;
+using backend.src.DTOs;
 using backend.src.DTOs.BoardDTOs;
 using backend.src.Interfaces;
 using backend.src.Models;
@@ -156,9 +157,8 @@ namespace backend.src.Service
             {
                 throw new ArgumentException("No boards found for the given user.");
             }
-            _context.Boards.RemoveRange(boards);
+            _context.Boards.RemoveRange((IEnumerable<Board>)boards);
             await _context.SaveChangesAsync();
-
         }
 
         public async Task DeleteColumn(int boardId, int columnId)
@@ -318,6 +318,25 @@ namespace backend.src.Service
             {
                 Console.WriteLine($"Error en GetAllBoardsWithUsers: {ex.Message}");
                 throw;
+            }
+        }
+
+        public async Task<List<UserResponse>> GetAssignedUsers(int boardId)
+        {
+            try
+            {
+                Board board = await _context.Boards
+                    .AsNoTracking()
+                    .Include(b => b.BoardUsers)
+                        .ThenInclude(bu => bu.User)
+                    .FirstOrDefaultAsync(b => b.Id == boardId)
+                    ?? throw new ArgumentException("Board not found");
+
+                return [.. board.BoardUsers.Select(bu => _mapper.Map<UserResponse>(bu.User))];
+            }
+            catch (System.Exception e)
+            {
+                throw new Exception(e.Message);
             }
         }
     }
