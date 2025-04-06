@@ -19,6 +19,7 @@ namespace backend.src.Models
         public string? BackgroundColor { get; set; }
         public DateTime? DeletedAt { get; set; }
 
+        
         [NotMapped]
         public ICollection<TaskModel>? Tasks 
         { 

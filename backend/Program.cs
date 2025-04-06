@@ -68,15 +68,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigins", builder =>
+    options.AddPolicy("AllowFrontend", policyBuilder =>
     {
-        builder.WithOrigins("http://localhost:3000", "http://localhost:5173")
-               .AllowAnyMethod()
-               .AllowAnyHeader()
-               .AllowCredentials(); 
+        policyBuilder
+            .WithOrigins("http://localhost:3000", "http://localhost:5173")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
-
 
 
 
@@ -101,6 +101,19 @@ builder.Services.AddAuthentication(cfg =>
         ClockSkew = TimeSpan.Zero,
         RequireExpirationTime = true
     };
+
+    x.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var token = context.Request.Cookies["accessToken"];
+            if (!string.IsNullOrEmpty(token))
+            {
+                context.Token = token;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 
@@ -113,15 +126,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-Console.WriteLine("CORS Configurado para: http://localhost:3000 y http://localhost:5173");
 
 
-// middlewares   
-app.UseCors("AllowSpecificOrigins");                       
-app.UseAuthentication();             
-app.UseAuthorization();             
-app.UseMiddleware<ExceptionHandlingMiddleware>(); 
-app.UseMiddleware<TokenValidationMiddleware>();
-app.MapControllers();                
+
+// middlewares              
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
+
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.MapControllers();
 app.Run();
-

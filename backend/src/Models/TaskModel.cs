@@ -19,7 +19,6 @@ namespace backend.src.Models
 
         public bool Completed { get; set; } = false;
         public DateTime? DeletedAt { get; set; }
-
         public int BoardColumnId { get; set; }
         
         [ForeignKey("BoardColumnId")]

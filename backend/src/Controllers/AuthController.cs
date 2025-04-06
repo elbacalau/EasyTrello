@@ -15,6 +15,14 @@ namespace backend.src.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var token = await _authService.LoginAsync(request.Email, request.Password);
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = false,
+                SameSite = SameSiteMode.Lax 
+            };
+            Response.Cookies.Append("accessToken", token, cookieOptions);
+
             return Ok(new ApiResponse<string>
             {
                 Result = "success",
