@@ -14,12 +14,12 @@ interface LoginForm {
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
-  
+
   const userData = async (): Promise<UserData | null> => {
     try {
       dispatch(showLoader());
       const response: ApiResponse<UserData> = await apiUserData();
-      
+
       if (response.result === "success" && response.detail) {
         const userData: UserData = response.detail;
         console.log("Datos de usuario cargados:", userData);
@@ -35,18 +35,16 @@ export const useAuth = () => {
     }
   };
 
+
   const login = async (loginForm: LoginForm): Promise<boolean> => {
     try {
       dispatch(showLoader());
-      const response: ApiResponse<string> = await apiLogin(
-        loginForm.email,
-        loginForm.password
-      );
+      const response = await apiLogin(loginForm.email, loginForm.password);
 
-      if (response.result === "success" && response.detail) {
-        const token: string = response.detail;
-        console.log("Token obtenido:", token);
-        localStorage.setItem("token", token);
+  
+      if (response.result === "success") {
+        console.log({response});
+        
         
         const user = await userData();
         return user !== null;
@@ -59,6 +57,7 @@ export const useAuth = () => {
       dispatch(hideLoader());
     }
   };
+
 
   return { login, userData };
 };
