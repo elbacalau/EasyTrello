@@ -14,32 +14,28 @@ export type FetchOptions = {
   showErrorNotification?: boolean; 
 };
 
+
 export async function fetchAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
-  const { 
-    method = "GET", 
-    body, 
-    headers, 
+  const {
+    method = "GET",
+    body,
+    headers,
     cache = "no-store",
-    showErrorNotification = true 
+    showErrorNotification = true
   } = options;
   
-  let token;
-  if (typeof window !== 'undefined') {
-    token = localStorage.getItem("token");
-  }
-  
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     method,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,
-    cache,
+    credentials: "include" 
   });
 
   const data = await response.json();
@@ -47,27 +43,24 @@ export async function fetchAPI<T>(
   if (!response.ok) {
     console.error("Error API:", data);
     
-    const errorMessage = data?.message || `Error ${response.status}: ${response.statusText}`;
-    
-    if (showErrorNotification && typeof window !== 'undefined') {
+    const errorMessage =
+      data?.message || `Error ${response.status}: ${response.statusText}`;
+
+    if (showErrorNotification && typeof window !== "undefined") {
       store.dispatch(
         addNotification({
           type: "error",
           message: errorMessage,
           title: `Error ${response.status}`,
-          duration: 7000,
+          duration: 7000
         })
       );
     }
     
     if (response.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem("token");
-        
-        if (!endpoint.includes("/auth/login")) {
-          console.log("Sesión expirada. Redirigiendo al login...");
-          window.location.href = "/login";
-        }
+      if (typeof window !== "undefined") {
+        console.log("Sesión expirada. Redirigiendo al login...");
+        window.location.href = "/login";
       }
     }
     
