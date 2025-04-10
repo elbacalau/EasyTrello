@@ -21,7 +21,7 @@ namespace backend.src.DTOs.TaskDTOs
         public string? BoardName { get; set; }
 
         public int AssignedUserId { get; set; }
-        public string? AssignedUserName { get; set; }
+        public UserResponse? AssignedUser { get; set; }
 
         public List<string> Labels { get; set; } = [];
         public List<TaskCommentResponse> Comments { get; set; } = [];

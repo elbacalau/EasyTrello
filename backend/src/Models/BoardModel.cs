@@ -29,10 +29,6 @@ namespace backend.src.Models
         public ICollection<BoardUser> BoardUsers { get; set; } = [];
         public ICollection<BoardColumn> Columns { get; set; } = [];
 
-        public static implicit operator Board(List<Board> v)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
 

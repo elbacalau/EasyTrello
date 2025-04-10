@@ -1,3 +1,5 @@
+import { AssignedUser } from "./userData";
+
 export interface Task {
   id:               number;
   name:             string;
@@ -11,7 +13,7 @@ export interface Task {
   boardId:          number;
   boardName:        null;
   assignedUserId:   number;
-  assignedUserName: null;
+  assignedUser: AssignedUser;
   labels:           string[];
   comments:         Comment[];
 }

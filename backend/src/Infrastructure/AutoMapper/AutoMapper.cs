@@ -60,7 +60,13 @@ namespace backend.src.Infrastructure.Mapper
             CreateMap<TaskModel, TaskResponse>()
                 .ForMember(dest => dest.BoardName, opt => opt.MapFrom(src => src.Board!.Name))
                 .ForMember(dest => dest.ColumnName, opt => opt.MapFrom(src => src.BoardColumn!.ColumnName))
-                .ForMember(dest => dest.AssignedUserName, opt => opt.MapFrom(src => $"{src.AssignedUser!.FirstName} {src.AssignedUser.LastName}"))
+                .ForMember(dest => dest.AssignedUser, opt => opt.MapFrom(src => src.AssignedUser != null ? new UserResponse 
+                { 
+                    Id = src.AssignedUser.Id,
+                    FirstName = src.AssignedUser.FirstName,
+                    LastName = src.AssignedUser.LastName,
+                    Email = src.AssignedUser.Email
+                } : null))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.Priority.ToString()))
                 .ForMember(dest => dest.Labels, opt => opt.MapFrom(src => src.Labels))

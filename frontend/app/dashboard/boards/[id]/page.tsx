@@ -20,10 +20,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, MoreHorizontal, Calendar, User, Tag } from "lucide-react"
-import { fetchBoardColumns } from "@/lib/api/board"
+import { fetchAssignedUsersBoard, fetchBoardColumns } from "@/lib/api/board"
 import { userAgent } from "next/server"
 import { Params } from "next/dist/shared/lib/router/utils/route-matcher"
-import { ApiResponseTypes } from "@/types/apiResponse"
+import { ApiResponse, ApiResponseTypes } from "@/types/apiResponse"
+import { AssignedUser, Board } from "@/types/userData"
+import { Comment, Task } from "@/types/tasks"
+import { BoardColumn } from "@/types/boardColumn"
 
 // Sample data for the board
 const boardData = {
@@ -33,148 +36,12 @@ const boardData = {
   color: "bg-blue-500",
 }
 
-// Sample data for columns
-const initialColumns = [
-  {
-    id: "todo",
-    title: "To Do",
-    tasks: [
-      {
-        id: 1,
-        title: "Create social media content calendar",
-        description: "Plan out posts for the next month across all platforms",
-        dueDate: "2024-06-15",
-        priority: "High",
-        assignee: {
-          id: 1,
-          name: "John Doe",
-          avatar: "/placeholder.svg?height=32&width=32",
-        },
-        comments: [
-          {
-            id: 1,
-            user: {
-              id: 2,
-              name: "Jane Smith",
-              avatar: "/placeholder.svg?height=32&width=32",
-            },
-            text: "Let's focus on Instagram and Twitter first",
-            timestamp: "2024-05-28T10:30:00Z",
-          },
-        ],
-      },
-      {
-        id: 2,
-        title: "Competitor analysis",
-        description: "Research what competitors are doing for their Q2 campaigns",
-        dueDate: "2024-06-10",
-        priority: "Medium",
-        assignee: {
-          id: 3,
-          name: "Alex Johnson",
-          avatar: "/placeholder.svg?height=32&width=32",
-        },
-        comments: [],
-      },
-    ],
-  },
-  {
-    id: "inprogress",
-    title: "In Progress",
-    tasks: [
-      {
-        id: 3,
-        title: "Design campaign assets",
-        description: "Create banners, social media graphics, and email templates",
-        dueDate: "2024-06-05",
-        priority: "High",
-        assignee: {
-          id: 4,
-          name: "Sarah Williams",
-          avatar: "/placeholder.svg?height=32&width=32",
-        },
-        comments: [
-          {
-            id: 2,
-            user: {
-              id: 1,
-              name: "John Doe",
-              avatar: "/placeholder.svg?height=32&width=32",
-            },
-            text: "The first drafts look great!",
-            timestamp: "2024-05-29T14:15:00Z",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "completed",
-    title: "Completed",
-    tasks: [
-      {
-        id: 4,
-        title: "Define campaign goals",
-        description: "Set clear objectives and KPIs for the campaign",
-        dueDate: "2024-05-25",
-        priority: "High",
-        assignee: {
-          id: 1,
-          name: "John Doe",
-          avatar: "/placeholder.svg?height=32&width=32",
-        },
-        comments: [],
-      },
-      {
-        id: 5,
-        title: "Budget approval",
-        description: "Get final sign-off on campaign budget from finance",
-        dueDate: "2024-05-20",
-        priority: "Medium",
-        assignee: {
-          id: 5,
-          name: "Michael Brown",
-          avatar: "/placeholder.svg?height=32&width=32",
-        },
-        comments: [],
-      },
-    ],
-  },
-]
-
-// Sample team members for assignment
-const teamMembers = [
-  {
-    id: 1,
-    name: "John Doe",
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-  {
-    id: 3,
-    name: "Alex Johnson",
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-  {
-    id: 4,
-    name: "Sarah Williams",
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-  {
-    id: 5,
-    name: "Michael Brown",
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-]
 
 export default function BoardPage() {
   const params: Params = useParams()
-  const [columns, setColumns] = useState(initialColumns)
-  const [selectedTask, setSelectedTask] = useState(null)
+  const [columns, setColumns] = useState<BoardColumn[]>([])
+  const [teamMembers, setTeamMembers] = useState<AssignedUser[]>([]);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false)
   const [newTask, setNewTask] = useState({
@@ -182,20 +49,32 @@ export default function BoardPage() {
     description: "",
     dueDate: "",
     priority: "Medium",
-    assignee: null,
+    assignee: undefined,
   })
   const [newComment, setNewComment] = useState("")
-  const [draggedTask, setDraggedTask] = useState(null)
+  const [draggedTask, setDraggedTask] = useState<Task>()
   const [draggedColumn, setDraggedColumn] = useState(null)
 
 
   useEffect(() => {
     const loadColumns = async () => {
-      const { result, detail } = await fetchBoardColumns(parseInt(params.id))
-      if (result === ApiResponseTypes[ApiResponseTypes.success]) {
-        console.log({ detail });
-        setColumns(detail)
-      }
+      await fetchBoardColumns(parseInt(params.id))
+        .then(({ result, detail }: ApiResponse<BoardColumn[]>) => {
+          if (result === ApiResponseTypes[ApiResponseTypes.success]) {
+            console.log('COL', detail);
+            
+            setColumns(detail);
+          }
+        });
+      
+      await fetchAssignedUsersBoard(parseInt(params.id))
+        .then(({ result, detail }: ApiResponse<AssignedUser[]>) => {
+          if (result === ApiResponseTypes[ApiResponseTypes.success]) {
+            console.log('ASU', detail);
+            
+            setTeamMembers(detail);
+          }
+        });
     }
     loadColumns();
   }, [params.id])
@@ -203,23 +82,23 @@ export default function BoardPage() {
 
 
 
-  const handleDragStart = (task, columnId) => {
+  const handleDragStart = (task: Task, columnId: number) => {
     setDraggedTask(task)
     setDraggedColumn(columnId)
   }
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e: Event) => {
     e.preventDefault()
   }
 
-  const handleDrop = (columnId) => {
+  const handleDrop = (columnId: number) => {
     if (draggedTask && draggedColumn !== columnId) {
       // Remove from original column
       const updatedColumns = columns.map((col) => {
         if (col.id === draggedColumn) {
           return {
             ...col,
-            tasks: col.tasks.filter((task) => task.id !== draggedTask.id),
+            tasks: col.tasks!.filter((task) => task.id !== draggedTask.id!),
           }
         }
         return col
@@ -242,7 +121,7 @@ export default function BoardPage() {
     setDraggedColumn(null)
   }
 
-  const handleAddTask = (columnId) => {
+  const handleAddTask = (columnId: number) => {
     if (newTask.title.trim() === "") return
 
     const task = {
@@ -285,7 +164,7 @@ export default function BoardPage() {
     const updatedColumns = columns.map((col) => {
       return {
         ...col,
-        tasks: col.tasks.map((task) => {
+        tasks: col.tasks!.map((task) => {
           if (task.id === selectedTask.id) {
             return {
               ...task,
@@ -363,7 +242,7 @@ export default function BoardPage() {
       </div>
 
       <div className="flex overflow-x-auto pb-4 gap-4">
-        {columns.map((column) => (
+        {columns.map((column: BoardColumn) => (
           <div
             key={column.id}
             className="flex-shrink-0 w-80"
@@ -374,7 +253,7 @@ export default function BoardPage() {
               <CardHeader className="py-3 px-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium">
-                    {column.title} ({column.tasks.length})
+                    {column.columnName} ({column.tasks?.length})
                   </CardTitle>
                   <Dialog open={isNewTaskDialogOpen} onOpenChange={setIsNewTaskDialogOpen}>
                     <DialogTrigger asChild>
@@ -386,7 +265,7 @@ export default function BoardPage() {
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Add New Task</DialogTitle>
-                        <DialogDescription>Create a new task for the {column.title} column.</DialogDescription>
+                        <DialogDescription>Create a new task for the {column.columnName} column.</DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
@@ -446,7 +325,7 @@ export default function BoardPage() {
                             <SelectContent>
                               {teamMembers.map((member) => (
                                 <SelectItem key={member.id} value={member.id.toString()}>
-                                  {member.name}
+                                  {member.firstName}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -465,7 +344,7 @@ export default function BoardPage() {
               </CardHeader>
               <CardContent className="px-4 pb-4 pt-0">
                 <div className="space-y-3">
-                  {column.tasks.map((task) => (
+                  {column.tasks!.map((task: Task) => (
                     <div
                       key={task.id}
                       draggable
@@ -479,7 +358,7 @@ export default function BoardPage() {
                           setIsTaskDialogOpen(true)
                         }}
                       >
-                        <div className="font-medium">{task.title}</div>
+                        <div className="font-medium">{task.name}</div>
                         {task.description && (
                           <div className="text-sm text-muted-foreground line-clamp-2">{task.description}</div>
                         )}
@@ -494,14 +373,14 @@ export default function BoardPage() {
                             {task.priority}
                           </div>
                         </div>
-                        {task.assignee && (
+                        {task.assignedUserId && (
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Avatar className="h-6 w-6">
-                                <AvatarImage src={task.assignee.avatar} alt={task.assignee.name} />
-                                <AvatarFallback>{task.assignee.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={`https://i.pravatar.cc/150?u=${task.assignedUser.firstName}`} alt={task.assignedUser.firstName!} />
+                                <AvatarFallback>{task.assignedUser.firstName} {task.assignedUser.lastName}</AvatarFallback>
                               </Avatar>
-                              <span className="text-xs text-muted-foreground">{task.assignee.name}</span>
+                              <span className="text-xs text-muted-foreground">{task.assignedUser.firstName} {task.assignedUser.lastName}</span>
                             </div>
                             {task.comments.length > 0 && (
                               <div className="text-xs text-muted-foreground">
@@ -526,7 +405,7 @@ export default function BoardPage() {
           {selectedTask && (
             <>
               <DialogHeader>
-                <DialogTitle>{selectedTask.title}</DialogTitle>
+                <DialogTitle>{selectedTask.name}</DialogTitle>
                 <DialogDescription>{selectedTask.description}</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -551,13 +430,13 @@ export default function BoardPage() {
                 <div>
                   <Label className="text-xs text-muted-foreground">Assignee</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    {selectedTask.assignee ? (
+                    {selectedTask.assignedUser ? (
                       <>
                         <Avatar className="h-6 w-6">
-                          <AvatarImage src={selectedTask.assignee.avatar} alt={selectedTask.assignee.name} />
-                          <AvatarFallback>{selectedTask.assignee.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={`https://i.pravatar.cc/150?u=${selectedTask.assignedUser.firstName}`} alt={selectedTask.assignedUser.firstName!} />
+                          <AvatarFallback>{selectedTask.assignedUser.firstName} {selectedTask.assignedUser.lastName}</AvatarFallback>
                         </Avatar>
-                        <span>{selectedTask.assignee.name}</span>
+                        <span>{selectedTask.assignedUser.firstName}</span>
                       </>
                     ) : (
                       <span className="text-muted-foreground">Unassigned</span>
@@ -572,20 +451,20 @@ export default function BoardPage() {
                     </span>
                   </div>
                   <div className="space-y-4 max-h-[200px] overflow-y-auto">
-                    {selectedTask.comments.map((comment) => (
+                    {selectedTask.comments.map((comment: Comment) => (
                       <div key={comment.id} className="flex gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={comment.user.avatar} alt={comment.user.name} />
-                          <AvatarFallback>{comment.user.name.charAt(0)}</AvatarFallback>
+                          <AvatarImage src={comment.userName} alt={comment.userName} />
+                          <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">{comment.user.name}</span>
+                            <span className="text-sm font-medium">{comment.userName}</span>
                             <span className="text-xs text-muted-foreground">
-                              {formatCommentTime(comment.timestamp)}
+                              {formatCommentTime(comment.createdAt)}
                             </span>
                           </div>
-                          <p className="text-sm">{comment.text}</p>
+                          <p className="text-sm">{comment.comment}</p>
                         </div>
                       </div>
                     ))}

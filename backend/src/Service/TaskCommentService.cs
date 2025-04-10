@@ -96,15 +96,11 @@ namespace backend.src.Service
               .Include(t => t.Comments)
               .FirstOrDefaultAsync(t => t.Id == taskId) ??
               throw new ArgumentException("Task not found");
-
             TaskComment comment = task.Comments
               .FirstOrDefault(c => c.Id == request.CommentId) ??
               throw new ArgumentException("Comment not found in the specified task");
-
             comment.Comment = request.NewComment ?? comment.Comment;
-
             await _context.SaveChangesAsync();
-
             return _mapper.Map<TaskCommentResponse>(comment);
         }
 

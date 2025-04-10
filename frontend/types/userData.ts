@@ -1,3 +1,5 @@
+import { BoardColumn } from "./boardColumn";
+
 export interface UserData {
   id: number | null;
   firstName: string;
@@ -25,17 +27,14 @@ export interface Board {
 }
 
 export interface AssignedUser {
+  id: number;
   firstName: string;
   lastName: string;
   email: string;
   phoneNumber: string;
-  role: string;
+  isActive: boolean;
 }
 
-export interface BoardColumn {
-  id: number;
-  columnName: string;
-}
 
 export interface BoardStats {
   pendingTasks: number;

@@ -1,4 +1,4 @@
-import { Board, BoardColumn, BoardStats } from "@/types/userData";
+import { AssignedUser, Board, BoardColumn, BoardStats } from "@/types/userData";
 import { fetchAPI } from "./httpClient";
 
 export const fetchBoards = (userId: number) => {
@@ -15,13 +15,20 @@ export const fetchBoardStats = async (boardId: number) => {
   }
 }
 
-export const fetchBoardColumns = async (boardId: number, columnId?: number | null) => {
-  const url: string = columnId !== undefined 
-    ? `/board/${boardId}/columns/${columnId}` 
-    : `/board/${boardId}/columns/`;
-  
+export const fetchBoardColumns = async (boardId: number) => {
+  const url: string = `/board/${boardId}/columns/`
   try {
-    const res = await fetchAPI<BoardColumn[] | BoardColumn>(url, { method: "GET" });
+    const res = await fetchAPI<BoardColumn[]>(url, { method: "GET" });
+    return res;
+  } catch (error) {
+    throw error;
+  }  
+}
+
+export const fetchAssignedUsersBoard = async (boardId: number) => {
+  const url: string = `/board/${boardId}/assignedUsers/`
+  try {
+    const res = await fetchAPI<AssignedUser[]>(url, { method: "GET" });
     return res;
   } catch (error) {
     throw error;
