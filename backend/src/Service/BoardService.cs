@@ -8,14 +8,16 @@ using backend.src.DTOs.BoardDTOs;
 using backend.src.Interfaces;
 using backend.src.Models;
 using Microsoft.EntityFrameworkCore;
+using backend.src.Services;
 
 namespace backend.src.Service
 {
-    public class BoardService(AppDbContext context, IHttpContextAccessor httpContextAccessor, IMapper mapper) : IBoardService
+    public class BoardService(AppDbContext context, IHttpContextAccessor httpContextAccessor, IMapper mapper, PermissionService permissionService) : IBoardService
     {
         private readonly AppDbContext _context = context;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly IMapper _mapper = mapper;
+        private readonly PermissionService _permissionService = permissionService;
 
         public async Task<AddColumnRequest> AddColumn(int boardId, AddColumnRequest request)
         {
@@ -46,35 +48,46 @@ namespace backend.src.Service
 
         public async Task<BoardResponse> AssignUserToBoard(AssignUserRequest assignUserRequest)
         {
-            // verify if board and user exists
-            Board board = _context.Boards.SingleOrDefault(b => b.Id == assignUserRequest.BoardId) ?? throw new ArgumentException("Board not found");
-            User user = _context.Users.SingleOrDefault(u => u.Id == assignUserRequest.UserId) ?? throw new ArgumentException("User not found");
+            var board = await _context.Boards
+                .Include(b => b.BoardUsers)
+                .FirstOrDefaultAsync(b => b.Id == assignUserRequest.BoardId)
+                ?? throw new ArgumentException("Board not found");
 
-            var existingAssignment = await _context.BoardUsers.FirstOrDefaultAsync(bu => bu.BoardId == board.Id && bu.UserId == user.Id);
+            var user = await _context.Users.FindAsync(assignUserRequest.UserId)
+                ?? throw new ArgumentException("User not found");
 
-            if (existingAssignment != null)
+            if (board.BoardUsers.Any(bu => bu.UserId == assignUserRequest.UserId))
             {
                 throw new ArgumentException("User is already assigned to this board.");
             }
 
+            // By default, new users are added with the "User" role
+            var role = assignUserRequest.Role ?? BoardRole.User;
+
             var boardUser = new BoardUser
             {
-                BoardId = board.Id,
-                UserId = user.Id,
-                Role = BoardRole.User
+                BoardId = assignUserRequest.BoardId,
+                UserId = assignUserRequest.UserId,
+                Role = role
             };
 
-            _context.BoardUsers.Add(boardUser);
+            board.BoardUsers.Add(boardUser);
             await _context.SaveChangesAsync();
+            
+            // Asignar permisos basados en el rol asignado
+            await _permissionService.AssignRolePermissionsAsync(assignUserRequest.UserId, assignUserRequest.BoardId, role);
 
-            return _mapper.Map<BoardResponse>(board);
+            var boardResponse = _mapper.Map<BoardResponse>(board);
+
+            return boardResponse;
         }
 
         public async Task ChangeUserRole(int userId, int boardId, int targetUserId, string newRole)
         {
-            if (!Enum.TryParse<BoardRole>(newRole, true, out var role) || !Enum.IsDefined(typeof(BoardRole), role))
+            // Parse string to enum
+            if (!Enum.TryParse<BoardRole>(newRole, out var role))
             {
-                throw new ArgumentException("Invalid role.");
+                throw new ArgumentException("Invalid role");
             }
 
             // verify the actual role from user
@@ -88,8 +101,26 @@ namespace backend.src.Service
             // change role for the tarjet user
             var tarjetBoardRole = await _context.BoardUsers.FirstOrDefaultAsync(bu => bu.UserId == targetUserId && bu.BoardId == boardId) ?? throw new ArgumentException("Target user is not assigned to this board.");
 
+            // Guardar el rol antiguo para comprobar si ha cambiado
+            var oldRole = tarjetBoardRole.Role;
+            
             tarjetBoardRole.Role = role;
             await _context.SaveChangesAsync();
+            
+            // Solo reasignar permisos si el rol ha cambiado
+            if (oldRole != role)
+            {
+                // Eliminar permisos anteriores
+                var oldPermissions = await _context.BoardUserPermissions
+                    .Where(p => p.BoardId == boardId && p.UserId == targetUserId)
+                    .ToListAsync();
+                    
+                _context.BoardUserPermissions.RemoveRange(oldPermissions);
+                await _context.SaveChangesAsync();
+                
+                // Asignar nuevos permisos basados en el nuevo rol
+                await _permissionService.AssignRolePermissionsAsync(targetUserId, boardId, role);
+            }
         }
 
         public async Task<BoardRequest> CreateBoard(BoardRequest board)
@@ -134,6 +165,9 @@ namespace backend.src.Service
 
             _context.BoardUsers.Add(boardUser);
             await _context.SaveChangesAsync();
+            
+            // Asignar permisos basados en el rol de Owner
+            await _permissionService.AssignRolePermissionsAsync(userId, newBoard.Id, BoardRole.Owner);
 
             return _mapper.Map<BoardRequest>(newBoard);
         }

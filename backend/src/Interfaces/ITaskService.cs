@@ -18,5 +18,6 @@ namespace backend.src.Interfaces
         Task<TaskResponse> AssignUserToTask(int taskId, [FromBody] TaskAssignUserRequest request, int boardId, int columnId);
         Task<TaskResponse> MoveTaskToColumn(int taskId, int boardId, int sourceColumnId, int targetColumnId);
         Task<TaskResponse> CompleteTask(int taskId, [FromBody] CompleteTaskRequest request, int boardId, int columnId);
+        Task<List<TaskResponse>> GetAllTasks(int boardId);
     }
 }

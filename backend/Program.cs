@@ -57,6 +57,8 @@ builder.Services.AddScoped<BoardService>();
 builder.Services.AddScoped<RoleValidationAttribute>();
 builder.Services.AddScoped<TaskService>();
 builder.Services.AddScoped<TaskCommentService>();
+builder.Services.AddScoped<backend.src.Services.PermissionService>();
+builder.Services.AddScoped<backend.src.Services.DbInitializerService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -136,6 +138,13 @@ app.UseAuthorization();
 
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// inicializar permisos
+using (var scope = app.Services.CreateScope())
+{
+    var dbInitializer = scope.ServiceProvider.GetRequiredService<backend.src.Services.DbInitializerService>();
+    await dbInitializer.InitializePermissionsAsync();
+}
 
 app.MapControllers();
 app.Run();

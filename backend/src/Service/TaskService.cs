@@ -134,6 +134,19 @@ namespace backend.src.Service
 
             return _mapper.Map<TaskResponse>(task);
         }
+
+        public async Task<List<TaskResponse>> GetAllTasks(int boardId)
+        {
+            Board board = await  _context.Boards.FirstOrDefaultAsync((b) => b.Id == boardId) ?? throw new ArgumentException("Tablero no encontrado");
+            List<TaskModel> tasks = board.Tasks?.ToList() ?? [];
+            List<TaskResponse> mappedTasks = [];
+            for (int i = 0; i < tasks.Count; i++) {
+                TaskModel task = tasks[i];
+                mappedTasks.Add(_mapper.Map<TaskResponse>(task));
+            }
+            return mappedTasks;
+
+        }
     }
 }
 

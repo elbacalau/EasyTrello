@@ -1,4 +1,5 @@
 using backend.src.DTOs.TaskDTOs;
+using backend.src.Middleware;
 using backend.src.Models;
 using backend.src.Service;
 using Microsoft.AspNetCore.Authorization;

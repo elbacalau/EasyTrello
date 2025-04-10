@@ -17,6 +17,7 @@ import {
   LayoutDashboard,
   Trello,
   Users,
+  ListTodo,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -57,6 +58,11 @@ export default function DashboardLayout({
       href: "/dashboard/boards",
       title: "Boards",
       icon: Trello,
+    },
+    {
+      href: "/dashboard/backlog",
+      title: "Backlog",
+      icon: ListTodo,
     },
     {
       href: "/dashboard/team",

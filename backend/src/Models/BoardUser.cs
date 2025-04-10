@@ -1,4 +1,5 @@
 using backend.src.Models;
+using System.Collections.Generic;
 
 namespace backend.Models
 {
@@ -9,6 +10,7 @@ namespace backend.Models
         public int UserId { get; set; }
         public User User { get; set; } = null!;
         public BoardRole Role { get; set; }
+        public ICollection<BoardUserPermission> UserPermissions { get; set; } = [];
     }
 
     // roles enum

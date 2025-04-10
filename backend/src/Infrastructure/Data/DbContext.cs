@@ -16,6 +16,8 @@ namespace backend.Data
         public required DbSet<BoardUser> BoardUsers { get; set; }
         public required DbSet<TaskComment> TaskComments { get; set; }
         public required DbSet<BoardColumn> BoardColumns { get; set; }
+        public required DbSet<Permission> Permissions { get; set; }
+        public required DbSet<BoardUserPermission> BoardUserPermissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,6 +36,20 @@ namespace backend.Data
                 .HasOne(bu => bu.User)
                 .WithMany(u => u.BoardUsers)
                 .HasForeignKey(bu => bu.UserId);
+
+            // ---- Configuración de BoardUserPermission ----
+            modelBuilder.Entity<BoardUserPermission>()
+                .HasKey(p => new { p.BoardId, p.UserId, p.PermissionId });
+                
+            modelBuilder.Entity<BoardUserPermission>()
+                .HasOne(bp => bp.BoardUser)
+                .WithMany(bu => bu.UserPermissions)
+                .HasForeignKey(bp => new { bp.BoardId, bp.UserId });
+                
+            modelBuilder.Entity<BoardUserPermission>()
+                .HasOne(bp => bp.Permission)
+                .WithMany(p => p.BoardUserPermissions)
+                .HasForeignKey(bp => bp.PermissionId);
 
             // Hasheamos la contraseña "Password1" con BCrypt
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword("Password1");

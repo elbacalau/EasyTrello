@@ -73,7 +73,6 @@ namespace backend.src.Controllers
 
         // delete user from one board
         [HttpDelete("{boardId}/user/{userId}")]
-        [ServiceFilter(typeof(RoleValidationAttribute))]
         public async Task<IActionResult> DeleteUserFromBoard(int boardId, int userId)
         {
             await _boardService.DeleteUserFromBoard(boardId, userId);
@@ -101,6 +100,7 @@ namespace backend.src.Controllers
 
 
         [HttpPost("{boardId}/addColumn")]
+        [RequirePermission(PermissionType.ManageColumns)]
         public async Task<IActionResult> AddColumn(int boardId, [FromBody] AddColumnRequest request)
         {
             var column = await _boardService.AddColumn(boardId, request);
@@ -154,7 +154,6 @@ namespace backend.src.Controllers
 
         
         [HttpGet("all-with-users")]
-        [Authorize] 
         public async Task<IActionResult> GetAllBoardsWithUsers()
         {
             var boardsWithUsers = await _boardService.GetAllBoardsWithUsers();
@@ -166,7 +165,6 @@ namespace backend.src.Controllers
         }
 
         [HttpGet("{boardId}/assignedUsers")]
-        [Authorize]
         public async Task<IActionResult> GetAssignedUsersFromBoard(int boardId)
         {
             List<UserResponse> assignedUsers = await _boardService.GetAssignedUsers(boardId);

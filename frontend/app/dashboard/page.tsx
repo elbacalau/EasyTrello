@@ -139,7 +139,7 @@ export default function DashboardPage() {
           </CardContent>
           <CardFooter>
             <Button asChild variant="outline" className="w-full">
-              <Link href="/dashboard/tasks">View All Tasks</Link>
+              <Link href="/dashboard/backlog">View All Tasks</Link>
             </Button>
           </CardFooter>
         </Card>
@@ -147,4 +147,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -21,20 +21,17 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, MoreHorizontal, Calendar, User, Tag } from "lucide-react"
 import { fetchAssignedUsersBoard, fetchBoardColumns } from "@/lib/api/board"
-import { userAgent } from "next/server"
 import { Params } from "next/dist/shared/lib/router/utils/route-matcher"
 import { ApiResponse, ApiResponseTypes } from "@/types/apiResponse"
-import { AssignedUser, Board } from "@/types/userData"
+import { AssignedUser, Board, UserData } from "@/types/userData"
 import { Comment, Task } from "@/types/tasks"
 import { BoardColumn } from "@/types/boardColumn"
+import { moveToColumn } from "@/lib/api/tasks"
+import { useAppSelector } from "@/types/hooks"
 
 // Sample data for the board
-const boardData = {
-  id: 1,
-  name: "Marketing Campaign",
-  description: "Q2 marketing campaign planning and execution",
-  color: "bg-blue-500",
-}
+
+
 
 
 export default function BoardPage() {
@@ -44,7 +41,13 @@ export default function BoardPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false)
-  const [newTask, setNewTask] = useState({
+  const [newTask, setNewTask] = useState<{
+    title: string;
+    description: string;
+    dueDate: string;
+    priority: string;
+    assignee: AssignedUser | undefined;
+  }>({
     title: "",
     description: "",
     dueDate: "",
@@ -52,8 +55,13 @@ export default function BoardPage() {
     assignee: undefined,
   })
   const [newComment, setNewComment] = useState("")
-  const [draggedTask, setDraggedTask] = useState<Task>()
-  const [draggedColumn, setDraggedColumn] = useState(null)
+  const [draggedTask, setDraggedTask] = useState<Task | undefined>(undefined)
+  const [draggedColumn, setDraggedColumn] = useState<number | undefined>(undefined)
+
+  const userData: UserData = useAppSelector((state) => state.user);
+  const currentBoard: Board | undefined = useMemo(() => {
+    return  userData?.boards.find((board) => board.id === parseInt(params.id));
+  }, [params.id]);
 
 
   useEffect(() => {
@@ -61,8 +69,6 @@ export default function BoardPage() {
       await fetchBoardColumns(parseInt(params.id))
         .then(({ result, detail }: ApiResponse<BoardColumn[]>) => {
           if (result === ApiResponseTypes[ApiResponseTypes.success]) {
-            console.log('COL', detail);
-            
             setColumns(detail);
           }
         });
@@ -70,8 +76,6 @@ export default function BoardPage() {
       await fetchAssignedUsersBoard(parseInt(params.id))
         .then(({ result, detail }: ApiResponse<AssignedUser[]>) => {
           if (result === ApiResponseTypes[ApiResponseTypes.success]) {
-            console.log('ASU', detail);
-            
             setTeamMembers(detail);
           }
         });
@@ -82,59 +86,74 @@ export default function BoardPage() {
 
 
 
-  const handleDragStart = (task: Task, columnId: number) => {
+  const handleDragStart = (task: Task, columnId: number | undefined) => {
+    if (columnId === undefined) return;
     setDraggedTask(task)
     setDraggedColumn(columnId)
   }
 
-  const handleDragOver = (e: Event) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
   }
 
-  const handleDrop = (columnId: number) => {
-    if (draggedTask && draggedColumn !== columnId) {
-      // Remove from original column
+  const handleDrop = (columnId: number | undefined) => {
+    if (draggedTask && draggedColumn !== undefined && columnId !== undefined && draggedColumn !== columnId) {
+      
       const updatedColumns = columns.map((col) => {
         if (col.id === draggedColumn) {
           return {
             ...col,
-            tasks: col.tasks!.filter((task) => task.id !== draggedTask.id!),
+            tasks: col.tasks?.filter((task) => task.id !== draggedTask.id) || []
           }
         }
         return col
       })
 
-      // Add to new column
       const finalColumns = updatedColumns.map((col) => {
         if (col.id === columnId) {
           return {
             ...col,
-            tasks: [...col.tasks, draggedTask],
+            tasks: [...(col.tasks || []), draggedTask]
           }
         }
         return col
       })
 
       setColumns(finalColumns)
+      console.log(columns);
+
+      
+      moveToColumn(draggedTask.id!, draggedColumn, parseInt(params.id), columnId);
     }
-    setDraggedTask(null)
-    setDraggedColumn(null)
+    setDraggedTask(undefined)
+    setDraggedColumn(undefined)
   }
 
-  const handleAddTask = (columnId: number) => {
-    if (newTask.title.trim() === "") return
+  const handleAddTask = (columnId: number | undefined) => {
+    if (newTask.title.trim() === "" || columnId === undefined) return;
 
-    const task = {
+    const task: Task = {
       id: Math.floor(Math.random() * 1000),
-      ...newTask,
+      name: newTask.title,
+      description: newTask.description,
+      createdAt: new Date(),
+      updatedAt: null,
+      dueDate: newTask.dueDate ? new Date(newTask.dueDate) : null,
+      priority: newTask.priority,
+      status: "Active",
+      assignedUserId: newTask.assignee?.id!,
+      assignedUser: newTask.assignee!,
+      boardId: parseInt(params.id),
+      boardColumnId: columnId,
       comments: [],
+      labels: []
     }
 
     const updatedColumns = columns.map((col) => {
       if (col.id === columnId) {
         return {
           ...col,
-          tasks: [...col.tasks, task],
+          tasks: [...(col.tasks || []), task]
         }
       }
       return col
@@ -146,45 +165,62 @@ export default function BoardPage() {
       description: "",
       dueDate: "",
       priority: "Medium",
-      assignee: null,
+      assignee: undefined,
     })
     setIsNewTaskDialogOpen(false)
+    
+    // TODO: Call API to create a new task on the server
+
+    
+  
   }
 
   const handleAddComment = () => {
-    if (newComment.trim() === "" || !selectedTask) return
+    if (newComment.trim() === "" || !selectedTask) return;
 
-    const comment = {
+
+    const currentUser = teamMembers.length > 0 ? teamMembers[0] : null;
+    if (!currentUser) return;
+
+    const comment: Comment = {
       id: Math.floor(Math.random() * 1000),
-      user: teamMembers[0], // Current user (hardcoded for demo)
-      text: newComment,
-      timestamp: new Date().toISOString(),
+      comment: newComment,
+      createdAt: new Date(),
+      userId: currentUser.id,
+      userName: `${currentUser.firstName} ${currentUser.lastName}`
     }
 
     const updatedColumns = columns.map((col) => {
       return {
         ...col,
-        tasks: col.tasks!.map((task) => {
+        tasks: col.tasks?.map((task) => {
           if (task.id === selectedTask.id) {
             return {
               ...task,
-              comments: [...task.comments, comment],
+              comments: [...(task.comments || []), comment]
             }
           }
           return task
-        }),
+        }) || []
       }
     })
 
     setColumns(updatedColumns)
     setNewComment("")
 
-    const updatedTask = updatedColumns.flatMap((col) => col.tasks).find((task) => task.id === selectedTask.id)
+    const updatedTask = updatedColumns
+      .flatMap((col) => col.tasks || [])
+      .find((task) => task && task.id === selectedTask.id)
 
-    setSelectedTask(updatedTask)
+    if (updatedTask) {
+      setSelectedTask(updatedTask)
+    }
+    
+    // TODO: Call API to add a comment on the server
+    
   }
 
-  const getPriorityColor = (priority) => {
+  const getPriorityColor = (priority: string): string => {
     switch (priority) {
       case "High":
         return "bg-destructive/10 text-destructive"
@@ -197,13 +233,13 @@ export default function BoardPage() {
     }
   }
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string | Date | null): string => {
     if (!dateString) return ""
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   }
 
-  const formatCommentTime = (timestamp) => {
+  const formatCommentTime = (timestamp: string | Date | null): string => {
     if (!timestamp) return ""
     const date = new Date(timestamp)
     return date.toLocaleDateString("en-US", {
@@ -218,8 +254,8 @@ export default function BoardPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{boardData.name}</h1>
-          <p className="text-muted-foreground">{boardData.description}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{currentBoard?.name}</h1>
+          <p className="text-muted-foreground">{currentBoard?.description}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm">
@@ -253,7 +289,7 @@ export default function BoardPage() {
               <CardHeader className="py-3 px-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium">
-                    {column.columnName} ({column.tasks?.length})
+                    {column.columnName} ({column.tasks?.length || 0})
                   </CardTitle>
                   <Dialog open={isNewTaskDialogOpen} onOpenChange={setIsNewTaskDialogOpen}>
                     <DialogTrigger asChild>
@@ -325,7 +361,7 @@ export default function BoardPage() {
                             <SelectContent>
                               {teamMembers.map((member) => (
                                 <SelectItem key={member.id} value={member.id.toString()}>
-                                  {member.firstName}
+                                  {member.firstName} {member.lastName}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -344,7 +380,7 @@ export default function BoardPage() {
               </CardHeader>
               <CardContent className="px-4 pb-4 pt-0">
                 <div className="space-y-3">
-                  {column.tasks!.map((task: Task) => (
+                  {column.tasks?.map((task: Task) => (
                     <div
                       key={task.id}
                       draggable
@@ -369,20 +405,20 @@ export default function BoardPage() {
                               {formatDate(task.dueDate)}
                             </div>
                           )}
-                          <div className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(task.priority)}`}>
+                          <div className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(task.priority || '')}`}>
                             {task.priority}
                           </div>
                         </div>
-                        {task.assignedUserId && (
+                        {task.assignedUserId && task.assignedUser && (
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Avatar className="h-6 w-6">
-                                <AvatarImage src={`https://i.pravatar.cc/150?u=${task.assignedUser.firstName}`} alt={task.assignedUser.firstName!} />
-                                <AvatarFallback>{task.assignedUser.firstName} {task.assignedUser.lastName}</AvatarFallback>
+                                <AvatarImage src={`https://i.pravatar.cc/150?u=${task.assignedUser.firstName}`} alt={task.assignedUser.firstName || ''} />
+                                <AvatarFallback>{task.assignedUser.firstName?.[0] || ''}{task.assignedUser.lastName?.[0] || ''}</AvatarFallback>
                               </Avatar>
                               <span className="text-xs text-muted-foreground">{task.assignedUser.firstName} {task.assignedUser.lastName}</span>
                             </div>
-                            {task.comments.length > 0 && (
+                            {task.comments?.length && task.comments.length > 0 && (
                               <div className="text-xs text-muted-foreground">
                                 {task.comments.length} comment{task.comments.length !== 1 ? "s" : ""}
                               </div>
@@ -414,13 +450,13 @@ export default function BoardPage() {
                     <Label className="text-xs text-muted-foreground">Due Date</Label>
                     <div className="flex items-center mt-1">
                       <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {formatDate(selectedTask.dueDate) || "No due date"}
+                      {formatDate(selectedTask.dueDate || '') || "No due date"}
                     </div>
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Priority</Label>
                     <div
-                      className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(selectedTask.priority)}`}
+                      className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(selectedTask.priority || '')}`}
                     >
                       <Tag className="mr-1 h-3 w-3" />
                       {selectedTask.priority}
@@ -433,13 +469,32 @@ export default function BoardPage() {
                     {selectedTask.assignedUser ? (
                       <>
                         <Avatar className="h-6 w-6">
-                        <AvatarImage src={`https://i.pravatar.cc/150?u=${selectedTask.assignedUser.firstName}`} alt={selectedTask.assignedUser.firstName!} />
-                          <AvatarFallback>{selectedTask.assignedUser.firstName} {selectedTask.assignedUser.lastName}</AvatarFallback>
+                          <AvatarImage 
+                            src={`https://i.pravatar.cc/150?u=${selectedTask.assignedUser.firstName}`} 
+                            alt={selectedTask.assignedUser.firstName || ''} 
+                          />
+                          <AvatarFallback>
+                            {selectedTask.assignedUser.firstName?.[0] || ''}
+                            {selectedTask.assignedUser.lastName?.[0] || ''}
+                          </AvatarFallback>
                         </Avatar>
-                        <span>{selectedTask.assignedUser.firstName}</span>
+                        <span>{selectedTask.assignedUser.firstName} {selectedTask.assignedUser.lastName}</span>
+                        
+                        {/* TODO: Implementar funcionalidad para cambiar asignación de usuario */}
+                        {/* <Button variant="ghost" size="sm" className="ml-2">
+                          <Edit className="h-3 w-3 mr-1" />
+                          Change
+                        </Button> */}
                       </>
                     ) : (
-                      <span className="text-muted-foreground">Unassigned</span>
+                      <>
+                        <span className="text-muted-foreground">Unassigned</span>
+                        {/* TODO: Implementar botón para asignar usuario */}
+                        {/* <Button variant="ghost" size="sm" className="ml-2">
+                          <User className="h-3 w-3 mr-1" />
+                          Assign
+                        </Button> */}
+                      </>
                     )}
                   </div>
                 </div>
@@ -447,14 +502,14 @@ export default function BoardPage() {
                   <div className="flex items-center justify-between">
                     <Label>Comments</Label>
                     <span className="text-xs text-muted-foreground">
-                      {selectedTask.comments.length} comment{selectedTask.comments.length !== 1 ? "s" : ""}
+                      {selectedTask.comments?.length || 0} comment{(selectedTask.comments?.length || 0) !== 1 ? "s" : ""}
                     </span>
                   </div>
                   <div className="space-y-4 max-h-[200px] overflow-y-auto">
-                    {selectedTask.comments.map((comment: Comment) => (
+                    {selectedTask.comments?.map((comment: Comment) => (
                       <div key={comment.id} className="flex gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={comment.userName} alt={comment.userName} />
+                          <AvatarImage src={`https://i.pravatar.cc/150?u=${comment.userName}`} alt={comment.userName} />
                           <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 space-y-1">
@@ -489,7 +544,10 @@ export default function BoardPage() {
                 <Button variant="outline" onClick={() => setIsTaskDialogOpen(false)}>
                   Close
                 </Button>
-                <Button>Save Changes</Button>
+                <Button>
+                  Save Changes
+                  {/* TODO: Implementar funcionalidad para guardar cambios en la tarea */}
+                </Button>
               </DialogFooter>
             </>
           )}
