@@ -461,7 +461,7 @@ export default function BoardPage() {
         )}
       </div>
 
-      <div className="flex flex-row gap-6 h-[calc(90vh-200px)]">
+      <div className="flex flex-row gap-6 h-[calc(90vh-16rem)]">
         <div className="flex-1 overflow-x-auto pb-4">
           <div className="flex gap-4">
             {filteredColumns.map((column: BoardColumn) => (
@@ -678,7 +678,7 @@ export default function BoardPage() {
         </div>
 
         {selectedTask && (
-          <div className="w-[calc(50%-16rem)] ">
+          <div className="w-[calc(50%-16rem)] h-fit">
             <Card className="h-full">
               <CardHeader>
                 <CardTitle>{selectedTask.name}</CardTitle>
