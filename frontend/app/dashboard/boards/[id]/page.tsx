@@ -68,7 +68,7 @@ export default function BoardPage() {
   const [filteredColumns, setFilteredColumns] = useState<BoardColumn[]>([]);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
+  const [searchTerm, setSearchTerm] = useState("");
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
 
   const [newTask, setNewTask] = useState<CreateTaskRequest>({
@@ -322,15 +322,15 @@ export default function BoardPage() {
   const handleDeleteTask = async (taskId: number, columnId: number) => {
     if (taskId === null) return;
     if (currentBoard?.id === null) return;
-    
+
     try {
       const columnaId = selectedColumnId || columnId;
-      
+
       await deleteTask({
         boardId: currentBoard!.id!,
         columnId: columnaId,
         taskId: taskId,
-      })
+      });
 
       dispatch(
         addNotification({
@@ -345,7 +345,7 @@ export default function BoardPage() {
       setSelectedTask(null);
     } catch (error) {
       console.error("Error al eliminar tarea:", error);
-      
+
       dispatch(
         addNotification({
           type: "error",
@@ -357,21 +357,38 @@ export default function BoardPage() {
     }
   };
 
-  
+  const getResaltedText = (term: string, text?: string) => {
+    if (!term) return text;
+    if (!text) return;
+    const regex = new RegExp(`(${term})`, "gi");
+    return text.split(regex).map((parte, i) =>
+      regex.test(parte) ? (
+        <mark key={i} className="bg-yellow-200 text-black px-0.5">
+          {parte}
+        </mark>
+      ) : (
+        parte
+      )
+    );
+  };
 
-  const getPriorityColor = (priority: TaskPriority): string => {
-    switch (priority) {
-      case TaskPriority.Critical:
-        return "bg-destructive/10 text-destructive";
-      case TaskPriority.High:
-        return "bg-destructive/10 text-destructive";
-      case TaskPriority.Medium:
-        return "bg-amber-500/10 text-amber-500";
-      case TaskPriority.Low:
-        return "bg-green-500/10 text-green-500";
-      default:
-        return "bg-muted text-muted-foreground";
+  const getPriorityColor = (priority: any): string => {
+    if (typeof priority === 'string') {
+      if (priority === 'Low' || priority === 'low') return "bg-green-500/10 text-green-500";
+      if (priority === 'Medium' || priority === 'medium') return "bg-amber-500/10 text-amber-500";
+      if (priority === 'High' || priority === 'high') return "bg-destructive/10 text-destructive";
+      if (priority === 'Critical' || priority === 'critical') return "bg-destructive/10 text-destructive";
     }
+    
+    const priorityNum = Number(priority);
+    if (!isNaN(priorityNum)) {
+      if (priorityNum === 4) return "bg-destructive/10 text-destructive"; // Critical
+      if (priorityNum === 3) return "bg-destructive/10 text-destructive"; // High
+      if (priorityNum === 2) return "bg-amber-500/10 text-amber-500";    // Medium
+      if (priorityNum === 1) return "bg-green-500/10 text-green-500";    // Low
+    }
+    
+    return "bg-muted text-muted-foreground";
   };
 
   const formatDate = (dateString: string | Date | null): string => {
@@ -444,6 +461,14 @@ export default function BoardPage() {
       />
 
       <div className="flex items-center">
+        <div className="mr-4">
+          <Input
+            placeholder="Search task..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
         {teamMembers.slice(0, 5).map((member: AssignedUser, index: number) => (
           <HoverCard key={member.id}>
             <HoverCardTrigger asChild>
@@ -521,10 +546,10 @@ export default function BoardPage() {
           </HoverCard>
         )}
 
-        {selectedMember && (
+        {(selectedMember || searchTerm.length > 0) && (
           <div className="ml-4 flex items-center gap-2">
             <span className="text-sm">
-              Filtrado por: {selectedMember.firstName} {selectedMember.lastName}
+              {selectedMember && `Filtrado por: ${selectedMember.firstName} ${selectedMember.lastName}`}
             </span>
             <Button
               variant="ghost"
@@ -532,6 +557,7 @@ export default function BoardPage() {
               onClick={() => {
                 setSelectedMember(null);
                 setFilteredColumns(columns);
+                setSearchTerm('');
               }}
             >
               Limpiar filtro
@@ -591,7 +617,11 @@ export default function BoardPage() {
                                 setSelectedColumnId(task.boardColumnId!);
                               }}
                             >
-                              <div className="font-medium">{task.name}</div>
+                              <div className="font-medium">
+                                {searchTerm
+                                  ? getResaltedText(searchTerm, task.name)
+                                  : task.name}
+                              </div>
                               <div className="flex items-center justify-between">
                                 {task.dueDate && (
                                   <div className="flex items-center text-xs text-muted-foreground">
