@@ -12,7 +12,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,13 +34,17 @@ import { fetchAssignedUsersBoard, fetchBoardColumns } from "@/lib/api/board";
 import { Params } from "next/dist/shared/lib/router/utils/route-matcher";
 import { ApiResponse, ApiResponseTypes } from "@/types/apiResponse";
 import { AssignedUser, Board, UserData } from "@/types/userData";
-import { Comment, Task, TaskStatus, TaskPriority, CreateTaskRequest } from "@/types/tasks";
+import {
+  Comment,
+  Task,
+  TaskStatus,
+  TaskPriority,
+  CreateTaskRequest,
+} from "@/types/tasks";
 import { BoardColumn } from "@/types/boardColumn";
-import { moveToColumn } from "@/lib/api/tasks";
-import { useAppSelector } from "@/types/hooks";
-import { getPermissions } from "@/lib/api/auth";
-import { Permission } from "@/types/permission";
-import { BoardRole, PermissionType } from "@/types/permissionEnum";
+import { createTask, deleteTask, moveToColumn } from "@/lib/api/tasks";
+import { useAppDispatch, useAppSelector } from "@/types/hooks";
+import { PermissionType } from "@/types/permissionEnum";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import {
@@ -49,24 +52,29 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { addNotification } from "@/store/slices/notificationSlice";
+import SelectedTaskCard from "@/components/selected-task";
 
 // Sample data for the board
 
 export default function BoardPage() {
+  const dispatch = useAppDispatch();
   const params: Params = useParams();
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [teamMembers, setTeamMembers] = useState<AssignedUser[]>([]);
-  const [selectedMember, setSelectedMember] = useState<AssignedUser | null>(null);
+  const [selectedMember, setSelectedMember] = useState<AssignedUser | null>(
+    null
+  );
   const [filteredColumns, setFilteredColumns] = useState<BoardColumn[]>([]);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
-  
+
   const [newTask, setNewTask] = useState<CreateTaskRequest>({
     name: "",
     description: "",
-    dueDate: new Date(),
+    dueDate: null,
     priority: TaskPriority.Medium,
     boardId: parseInt(params.id),
     boardColumnId: 0,
@@ -76,7 +84,6 @@ export default function BoardPage() {
     comments: [],
   });
 
-  
   const [newComment, setNewComment] = useState("");
   const [draggedTask, setDraggedTask] = useState<Task | undefined>(undefined);
   const [draggedColumn, setDraggedColumn] = useState<number | undefined>(
@@ -88,40 +95,31 @@ export default function BoardPage() {
     return userData?.boards.find((board) => board.id === parseInt(params.id));
   }, [params.id, userData]);
 
-  const {
-    permissions,
-    can,
-    isAdminOrOwner,
-    loading,
-    reload,
-    error,
-    hasRoleOf,
-    isOwner,
-    isViewer,
-  } = usePermissions(parseInt(params.id));
+  const { can, isAdminOrOwner, isViewer } = usePermissions(parseInt(params.id));
+  const [selectedColumnId, setSelectedColumnId] = useState<number | null>(null);
 
   useEffect(() => {
-    const loadColumns = async () => {
-      await fetchBoardColumns(parseInt(params.id)).then(
-        ({ result, detail }: ApiResponse<BoardColumn[]>) => {
-          if (result === ApiResponseTypes[ApiResponseTypes.success]) {
-            setColumns(detail);
-            setFilteredColumns(detail);
-          }
-        }
-      );
-
-      await fetchAssignedUsersBoard(parseInt(params.id)).then(
-        ({ result, detail }: ApiResponse<AssignedUser[]>) => {
-          if (result === ApiResponseTypes[ApiResponseTypes.success]) {
-            setTeamMembers(detail);
-          }
-        }
-      );
-    };
-
     loadColumns();
   }, [params.id]);
+
+  const loadColumns = async () => {
+    await fetchBoardColumns(parseInt(params.id)).then(
+      ({ result, detail }: ApiResponse<BoardColumn[]>) => {
+        if (result === ApiResponseTypes[ApiResponseTypes.success]) {
+          setColumns(detail);
+          setFilteredColumns(detail);
+        }
+      }
+    );
+
+    await fetchAssignedUsersBoard(parseInt(params.id)).then(
+      ({ result, detail }: ApiResponse<AssignedUser[]>) => {
+        if (result === ApiResponseTypes[ApiResponseTypes.success]) {
+          setTeamMembers(detail);
+        }
+      }
+    );
+  };
 
   const handleDragStart = (task: Task, columnId: number | undefined) => {
     if (columnId === undefined) return;
@@ -162,11 +160,14 @@ export default function BoardPage() {
       });
 
       setColumns(finalColumns);
-      
+
       if (selectedMember) {
-        const filtered = finalColumns.map(column => ({
+        const filtered = finalColumns.map((column) => ({
           ...column,
-          tasks: column.tasks?.filter(task => task.assignedUserId === selectedMember.id) || []
+          tasks:
+            column.tasks?.filter(
+              (task) => task.assignedUserId === selectedMember.id
+            ) || [],
         }));
         setFilteredColumns(filtered);
       } else {
@@ -184,7 +185,7 @@ export default function BoardPage() {
     setDraggedColumn(undefined);
   };
 
-  const handleAddTask = (columnId: number | undefined) => {
+  const handleAddTask = async (columnId: number) => {
     if (newTask.name.trim() === "" || columnId === undefined) return;
 
     const task: Task = {
@@ -217,7 +218,7 @@ export default function BoardPage() {
     setNewTask({
       name: "",
       description: "",
-      dueDate: new Date(),
+      dueDate: null,
       priority: TaskPriority.Medium,
       boardId: parseInt(params.id),
       boardColumnId: columnId,
@@ -229,8 +230,28 @@ export default function BoardPage() {
     setIsNewTaskDialogOpen(false);
 
     if (can(PermissionType.CreateTask)) {
-      // TODO: Call API to create a new task on the server
-      console.log({ ...newTask, boardColumnId: columnId });
+      try {
+        await createTask({ ...newTask, boardColumnId: columnId });
+        dispatch(
+          addNotification({
+            type: "success",
+            title: "Éxito",
+            message: "Tarea creada correctamente",
+            duration: 5000,
+          })
+        );
+
+        await loadColumns();
+      } catch (error) {
+        dispatch(
+          addNotification({
+            type: "error",
+            title: "Error",
+            message: "Hubo un problema al crear la tarea",
+            duration: 5000,
+          })
+        );
+      }
     }
   };
 
@@ -282,19 +303,61 @@ export default function BoardPage() {
 
   const handleSelectMember = (member: AssignedUser) => {
     if (member.id === null) return;
-    
+
     setSelectedMember(member);
-    
+
     if (member) {
-      const filtered = columns.map(column => ({
+      const filtered = columns.map((column) => ({
         ...column,
-        tasks: column.tasks?.filter(task => task.assignedUserId === member.id) || []
+        tasks:
+          column.tasks?.filter((task) => task.assignedUserId === member.id) ||
+          [],
       }));
       setFilteredColumns(filtered);
     } else {
       setFilteredColumns(columns);
     }
   };
+
+  const handleDeleteTask = async (taskId: number, columnId: number) => {
+    if (taskId === null) return;
+    if (currentBoard?.id === null) return;
+    
+    try {
+      const columnaId = selectedColumnId || columnId;
+      
+      await deleteTask({
+        boardId: currentBoard!.id!,
+        columnId: columnaId,
+        taskId: taskId,
+      })
+
+      dispatch(
+        addNotification({
+          type: "success",
+          title: "Éxito",
+          message: "Tarea eliminada correctamente",
+          duration: 5000,
+        })
+      );
+
+      loadColumns();
+      setSelectedTask(null);
+    } catch (error) {
+      console.error("Error al eliminar tarea:", error);
+      
+      dispatch(
+        addNotification({
+          type: "error",
+          title: "Error",
+          message: "No se pudo eliminar la tarea",
+          duration: 5000,
+        })
+      );
+    }
+  };
+
+  
 
   const getPriorityColor = (priority: TaskPriority): string => {
     switch (priority) {
@@ -388,12 +451,10 @@ export default function BoardPage() {
                 className={`w-10 h-10 rounded-full border-2 border-white overflow-hidden transition-transform hover:scale-105 hover:ring-2 hover:ring-blue-400 cursor-pointer ${
                   index !== 0 ? "-ml-3" : ""
                 } ${
-                  selectedMember?.id === member.id 
-                    ? "ring-2 ring-blue-400" 
-                    : ""
+                  selectedMember?.id === member.id ? "ring-2 ring-blue-400" : ""
                 }`}
                 onClick={() => {
-                  handleSelectMember(member)
+                  handleSelectMember(member);
                 }}
               >
                 <img
@@ -438,8 +499,8 @@ export default function BoardPage() {
                     <div
                       key={member.id}
                       className={`flex items-center gap-2 cursor-pointer ${
-                        selectedMember?.id === member.id 
-                          ? "ring-2 ring-blue-400 rounded-full p-1" 
+                        selectedMember?.id === member.id
+                          ? "ring-2 ring-blue-400 rounded-full p-1"
                           : ""
                       }`}
                       onClick={() => handleSelectMember(member)}
@@ -495,131 +556,20 @@ export default function BoardPage() {
                       <CardTitle className="text-sm font-medium">
                         {column.columnName} ({column.tasks?.length || 0})
                       </CardTitle>
-                      <Dialog
-                        open={isNewTaskDialogOpen}
-                        onOpenChange={setIsNewTaskDialogOpen}
-                      >
-                        <DialogTrigger asChild>
-                          {isViewer() ? null : (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <Plus className="h-4 w-4" />
-                              <span className="sr-only">Add task</span>
-                            </Button>
-                          )}
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Add New Task</DialogTitle>
-                            <DialogDescription>
-                              Create a new task for the {column.columnName}{" "}
-                              column.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div className="grid gap-2">
-                              <Label htmlFor="title">Task Title</Label>
-                              <Input
-                                id="title"
-                                placeholder="Enter task title"
-                                value={newTask.name}
-                                onChange={(e) =>
-                                  setNewTask({
-                                    ...newTask,
-                                    name: e.target.value,
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="description">Description</Label>
-                              <Textarea
-                                id="description"
-                                placeholder="Enter task description"
-                                value={newTask.description}
-                                onChange={(e) =>
-                                  setNewTask({
-                                    ...newTask,
-                                    description: e.target.value,
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="dueDate">Due Date</Label>
-                              <Input
-                                id="dueDate"
-                                type="date"
-                                value={newTask.dueDate.toISOString()}
-                                onChange={(e) =>
-                                  setNewTask({
-                                    ...newTask,
-                                    dueDate: new Date(e.target.value),
-                                  })
-                                }
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="priority">Priority</Label>
-                              <Select
-                                value={newTask.priority.toString()}
-                                onValueChange={(value) =>
-                                  setNewTask({ ...newTask, priority: parseInt(value) as TaskPriority })
-                                }
-                              >
-                                <SelectTrigger id="priority">
-                                  <SelectValue placeholder="Select priority" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value={TaskPriority.Low.toString()}>Low</SelectItem>
-                                  <SelectItem value={TaskPriority.Medium.toString()}>Medium</SelectItem>
-                                  <SelectItem value={TaskPriority.High.toString()}>High</SelectItem>
-                                  <SelectItem value={TaskPriority.Critical.toString()}>Critical</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="assignee">Assignee</Label>
-                              <Select
-                                onValueChange={(value) => {
-                                  const assignee = teamMembers.find(
-                                    (member) => member.id.toString() === value
-                                  );
-                                  setNewTask({ ...newTask, assignedUserId: assignee?.id! });
-                                }}
-                              >
-                                <SelectTrigger id="assignee">
-                                  <SelectValue placeholder="Assign to..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {teamMembers.map((member) => (
-                                    <SelectItem
-                                      key={member.id}
-                                      value={member.id.toString()}
-                                    >
-                                      {member.firstName} {member.lastName}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          <DialogFooter>
-                            <Button
-                              variant="outline"
-                              onClick={() => setIsNewTaskDialogOpen(false)}
-                            >
-                              Cancel
-                            </Button>
-                            <Button onClick={() => handleAddTask(column.id)}>
-                              Add Task
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                      {isViewer() ? null : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            setSelectedColumnId(column.id!);
+                            setIsNewTaskDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="h-4 w-4" />
+                          <span className="sr-only">Add task</span>
+                        </Button>
+                      )}
                     </div>
                   </CardHeader>
 
@@ -627,7 +577,6 @@ export default function BoardPage() {
                   <CardContent className="px-4 pb-4 pt-0 overflow-y-auto max-h-[calc(100vh-300px)]">
                     <div className="space-y-3">
                       {column.tasks?.map((task: Task) => {
-                        
                         return (
                           <div
                             key={task.id}
@@ -639,6 +588,7 @@ export default function BoardPage() {
                               className="p-3 space-y-3"
                               onClick={() => {
                                 setSelectedTask(task);
+                                setSelectedColumnId(task.boardColumnId!);
                               }}
                             >
                               <div className="font-medium">{task.name}</div>
@@ -676,17 +626,16 @@ export default function BoardPage() {
                                     </span>
                                   </div>
                                   {task.comments?.length &&
-                                    task.comments.length > 0  ? (
-                                      <div className="text-xs text-muted-foreground">
-                                        {task.comments.length} comment
-                                        {task.comments.length !== 1 ? "s" : ""}
-                                      </div>
-                                    ): (
-                                      <div className="text-xs text-muted-foreground">
-                                        No comments
-                                      </div>
-                                    )}
-                                  
+                                  task.comments.length > 0 ? (
+                                    <div className="text-xs text-muted-foreground">
+                                      {task.comments.length} comment
+                                      {task.comments.length !== 1 ? "s" : ""}
+                                    </div>
+                                  ) : (
+                                    <div className="text-xs text-muted-foreground">
+                                      No comments
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -701,128 +650,176 @@ export default function BoardPage() {
           </div>
         </div>
 
+        {/* CARGAMOS COMPONENTE DE LA TAREA SELECCIONADA */}
         {selectedTask && (
-          <div className="w-[calc(50%-16rem)] h-fit">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle>{selectedTask.name}</CardTitle>
-              </CardHeader>
-              <CardContent className="overflow-y-auto max-h-[calc(100vh-300px)]">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Description</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedTask.description || "No description provided"}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Due Date</h3>
-                      <div className="flex items-center">
-                        <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
-                          {formatDate(selectedTask.dueDate || "") ||
-                            "No due date"}
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Priority</h3>
-                      <div
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(
-                          selectedTask.priority || TaskPriority.Medium
-                        )}`}
-                      >
-                        <Tag className="mr-1 h-3 w-3" />
-                        {selectedTask.priority ? TaskPriority[selectedTask.priority] : "Medium"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Assignee</h3>
-                    <div className="flex items-center gap-2">
-                      {selectedTask.assignedUser ? (
-                        <>
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={`https://i.pravatar.cc/150?u=${selectedTask.assignedUser.firstName}`}
-                              alt={selectedTask.assignedUser.firstName || ""}
-                            />
-                            <AvatarFallback>
-                              {selectedTask.assignedUser.firstName?.[0] || ""}
-                              {selectedTask.assignedUser.lastName?.[0] || ""}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm">
-                            {selectedTask.assignedUser.firstName}{" "}
-                            {selectedTask.assignedUser.lastName}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">
-                          Unassigned
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-medium">Comments</h3>
-                      <span className="text-xs text-muted-foreground">
-                        {selectedTask.comments?.length || 0} comment
-                        {(selectedTask.comments?.length || 0) !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <div className="space-y-4">
-                      {selectedTask.comments?.map((comment: Comment) => (
-                        <div key={comment.id} className="flex gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={`https://i.pravatar.cc/150?u=${comment.userName}`}
-                              alt={comment.userName}
-                            />
-                            <AvatarFallback>
-                              {comment.userName.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">
-                                {comment.userName}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {formatCommentTime(comment.createdAt)}
-                              </span>
-                            </div>
-                            <p className="text-sm">{comment.comment}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-2 mt-4">
-                      <Input
-                        placeholder="Add a comment..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleAddComment();
-                          }
-                        }}
-                      />
-                      <Button onClick={handleAddComment}>Post</Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <SelectedTaskCard
+            selectedTask={selectedTask}
+            newComment={newComment}
+            columnId={selectedTask.boardColumnId || 0}
+            setNewComment={setNewComment}
+            handleAddComment={handleAddComment}
+            formatDate={formatDate}
+            formatCommentTime={formatCommentTime}
+            getPriorityColor={getPriorityColor}
+            handleDeleteTask={handleDeleteTask}
+          />
         )}
       </div>
+
+      {/* DIALOG PARA CREAR NUEVA TAREA */}
+      <Dialog
+        open={isNewTaskDialogOpen}
+        onOpenChange={(open) => {
+          setIsNewTaskDialogOpen(open);
+          if (!open) {
+            setSelectedColumnId(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Task</DialogTitle>
+            <DialogDescription>
+              Create a new task for the{" "}
+              {
+                filteredColumns.find((col) => col.id === selectedColumnId)
+                  ?.columnName
+              }{" "}
+              column.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Task Title</Label>
+              <Input
+                id="title"
+                placeholder="Enter task title"
+                value={newTask.name}
+                onChange={(e) =>
+                  setNewTask({
+                    ...newTask,
+                    name: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Enter task description"
+                value={newTask.description}
+                onChange={(e) =>
+                  setNewTask({
+                    ...newTask,
+                    description: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="dueDate">Due Date</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="dueDate"
+                  type="date"
+                  value={
+                    newTask.dueDate
+                      ? new Date(newTask.dueDate).toISOString().split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setNewTask({
+                      ...newTask,
+                      dueDate: e.target.value ? new Date(e.target.value) : null,
+                    })
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const today = new Date();
+                    setNewTask({
+                      ...newTask,
+                      dueDate: today,
+                    });
+                  }}
+                >
+                  Hoy
+                </Button>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select
+                value={newTask.priority.toString()}
+                onValueChange={(value) =>
+                  setNewTask({
+                    ...newTask,
+                    priority: parseInt(value) as TaskPriority,
+                  })
+                }
+              >
+                <SelectTrigger id="priority">
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={TaskPriority.Low.toString()}>
+                    Low
+                  </SelectItem>
+                  <SelectItem value={TaskPriority.Medium.toString()}>
+                    Medium
+                  </SelectItem>
+                  <SelectItem value={TaskPriority.High.toString()}>
+                    High
+                  </SelectItem>
+                  <SelectItem value={TaskPriority.Critical.toString()}>
+                    Critical
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="assignee">Assignee</Label>
+              <Select
+                onValueChange={(value) => {
+                  const assignee = teamMembers.find(
+                    (member) => member.id.toString() === value
+                  );
+                  setNewTask({ ...newTask, assignedUserId: assignee?.id! });
+                }}
+              >
+                <SelectTrigger id="assignee">
+                  <SelectValue placeholder="Assign to..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id.toString()}>
+                      {member.firstName} {member.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsNewTaskDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() =>
+                selectedColumnId && handleAddTask(selectedColumnId)
+              }
+            >
+              Add Task
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

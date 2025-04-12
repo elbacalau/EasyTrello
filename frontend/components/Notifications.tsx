@@ -12,6 +12,7 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast";
+import { useAppDispatch, useAppSelector } from "@/types/hooks";
 
 const getVariantFromType = (type: string): "default" | "destructive" => {
   switch (type) {
@@ -23,8 +24,8 @@ const getVariantFromType = (type: string): "default" | "destructive" => {
 };
 
 export default function Notifications() {
-  const { notifications } = useSelector((state: RootState) => state.notification);
-  const dispatch = useDispatch();
+  const { notifications } = useAppSelector((state: RootState) => state.notification);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     notifications.forEach((notification) => {

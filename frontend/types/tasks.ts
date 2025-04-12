@@ -33,7 +33,7 @@ export interface Comment {
 export interface CreateTaskRequest {
   name: string;
   description: string;
-  dueDate: Date;
+  dueDate?: Date | null;
   priority: TaskPriority;
   boardId: number;
   boardColumnId: number;
