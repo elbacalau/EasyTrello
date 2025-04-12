@@ -44,6 +44,11 @@ import { Permission } from "@/types/permission";
 import { BoardRole, PermissionType } from "@/types/permissionEnum";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 // Sample data for the board
 
@@ -51,6 +56,8 @@ export default function BoardPage() {
   const params: Params = useParams();
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [teamMembers, setTeamMembers] = useState<AssignedUser[]>([]);
+  const [selectedMember, setSelectedMember] = useState<AssignedUser | null>(null);
+  const [filteredColumns, setFilteredColumns] = useState<BoardColumn[]>([]);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
@@ -91,15 +98,13 @@ export default function BoardPage() {
     isViewer,
   } = usePermissions(parseInt(params.id));
 
-  
-  
-
   useEffect(() => {
     const loadColumns = async () => {
       await fetchBoardColumns(parseInt(params.id)).then(
         ({ result, detail }: ApiResponse<BoardColumn[]>) => {
           if (result === ApiResponseTypes[ApiResponseTypes.success]) {
             setColumns(detail);
+            setFilteredColumns(detail);
           }
         }
       );
@@ -208,12 +213,9 @@ export default function BoardPage() {
     });
     setIsNewTaskDialogOpen(false);
 
-    
     if (can(PermissionType.CreateTask)) {
-      
       // TODO: Call API to create a new task on the server
     }
-
   };
 
   const handleAddComment = () => {
@@ -257,10 +259,24 @@ export default function BoardPage() {
       setSelectedTask(updatedTask);
     }
 
-    
-
     if (can(PermissionType.CreateComment)) {
       // TODO: Call API to add a comment on the server
+    }
+  };
+
+  const handleSelectMember = (member: AssignedUser) => {
+    if (member.id === null) return;
+    
+    setSelectedMember(member);
+    
+    if (member) {
+      const filtered = columns.map(column => ({
+        ...column,
+        tasks: column.tasks?.filter(task => task.assignedUserId === member.id) || []
+      }));
+      setFilteredColumns(filtered);
+    } else {
+      setFilteredColumns(columns);
     }
   };
 
@@ -310,49 +326,145 @@ export default function BoardPage() {
         <div className="flex items-center gap-2">
           {isAdminOrOwner() ? (
             <Button variant="outline" size="sm">
-              <User className="mr-2 h-4 w-4" /  >
+              <User className="mr-2 h-4 w-4" />
               Invite
             </Button>
-          ) : (
-            null
-          )}
-          
+          ) : null}
+
           {isAdminOrOwner() ? (
             <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-              <DropdownMenuItem>Edit Board</DropdownMenuItem>
-              <DropdownMenuItem>Board Settings</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">
-                Delete Board
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-            
-            
-          </DropdownMenu>
-          ) : (
-            null
-          )}
-          
+                <DropdownMenuItem>Edit Board</DropdownMenuItem>
+                <DropdownMenuItem>Board Settings</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive">
+                  Delete Board
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
         </div>
       </div>
 
       <Breadcrumb
-          segments={[
-            { name: "Dashboard", href: "/dashboard" },
-            { name: "Boards", href: "/dashboard/boards" },
-            { name: currentBoard?.name || "", href: `/dashboard/boards/${currentBoard?.id}`, current: true },
-          ]}
-        />
+        segments={[
+          { name: "Dashboard", href: "/dashboard" },
+          { name: "Boards", href: "/dashboard/boards" },
+          {
+            name: currentBoard?.name || "",
+            href: `/dashboard/boards/${currentBoard?.id}`,
+            current: true,
+          },
+        ]}
+      />
+
+      <div className="flex items-center">
+        {teamMembers.slice(0, 5).map((member: AssignedUser, index: number) => (
+          <HoverCard key={member.id}>
+            <HoverCardTrigger asChild>
+              <div
+                className={`w-10 h-10 rounded-full border-2 border-white overflow-hidden transition-transform hover:scale-105 hover:ring-2 hover:ring-blue-400 cursor-pointer ${
+                  index !== 0 ? "-ml-3" : ""
+                } ${
+                  selectedMember?.id === member.id 
+                    ? "ring-2 ring-blue-400" 
+                    : ""
+                }`}
+                onClick={() => {
+                  handleSelectMember(member)
+                }}
+              >
+                <img
+                  src={`https://i.pravatar.cc/150?u=${member.firstName}`}
+                  alt={member.firstName}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-auto">
+              <div className="flex items-center gap-2">
+                <img
+                  src={`https://i.pravatar.cc/150?u=${member.firstName}`}
+                  alt={member.firstName}
+                  className="w-8 h-8 rounded-full"
+                />
+                <div>
+                  <p className="font-medium">
+                    {member.firstName} {member.lastName}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {member.email}
+                  </p>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        ))}
+
+        {teamMembers.length > 5 && (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <div className="-ml-3 w-10 h-10 rounded-full border-2 border-white bg-gray-200 text-sm flex items-center justify-center font-medium text-gray-600 hover:scale-105 hover:ring-2 hover:ring-blue-400 transition-transform cursor-pointer">
+                +{teamMembers.length - 5}
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-auto">
+              <div className="space-y-2">
+                <p className="font-medium">Miembros adicionales</p>
+                <div className="space-y-1">
+                  {teamMembers.slice(5).map((member) => (
+                    <div
+                      key={member.id}
+                      className={`flex items-center gap-2 cursor-pointer ${
+                        selectedMember?.id === member.id 
+                          ? "ring-2 ring-blue-400 rounded-full p-1" 
+                          : ""
+                      }`}
+                      onClick={() => handleSelectMember(member)}
+                    >
+                      <img
+                        src={`https://i.pravatar.cc/150?u=${member.firstName}`}
+                        alt={member.firstName}
+                        className="w-6 h-6 rounded-full"
+                      />
+                      <span className="text-sm">
+                        {member.firstName} {member.lastName}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        )}
+
+        {selectedMember && (
+          <div className="ml-4 flex items-center gap-2">
+            <span className="text-sm">
+              Filtrado por: {selectedMember.firstName} {selectedMember.lastName}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedMember(null);
+                setFilteredColumns(columns);
+              }}
+            >
+              Limpiar filtro
+            </Button>
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-row gap-6 h-[calc(90vh-200px)]">
         <div className="flex-1 overflow-x-auto pb-4">
           <div className="flex gap-4">
-            {columns.map((column: BoardColumn) => (
+            {filteredColumns.map((column: BoardColumn) => (
               <div
                 key={column.id}
                 className="flex-shrink-0 w-80"
@@ -371,7 +483,11 @@ export default function BoardPage() {
                       >
                         <DialogTrigger asChild>
                           {isViewer() ? null : (
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                            >
                               <Plus className="h-4 w-4" />
                               <span className="sr-only">Add task</span>
                             </Button>
@@ -381,7 +497,8 @@ export default function BoardPage() {
                           <DialogHeader>
                             <DialogTitle>Add New Task</DialogTitle>
                             <DialogDescription>
-                              Create a new task for the {column.columnName} column.
+                              Create a new task for the {column.columnName}{" "}
+                              column.
                             </DialogDescription>
                           </DialogHeader>
                           <div className="grid gap-4 py-4">
@@ -392,7 +509,10 @@ export default function BoardPage() {
                                 placeholder="Enter task title"
                                 value={newTask.title}
                                 onChange={(e) =>
-                                  setNewTask({ ...newTask, title: e.target.value })
+                                  setNewTask({
+                                    ...newTask,
+                                    title: e.target.value,
+                                  })
                                 }
                               />
                             </div>
@@ -483,67 +603,72 @@ export default function BoardPage() {
                       </Dialog>
                     </div>
                   </CardHeader>
+
+                  {/* TASK CARD */}
                   <CardContent className="px-4 pb-4 pt-0 overflow-y-auto max-h-[calc(100vh-300px)]">
                     <div className="space-y-3">
-                      {column.tasks?.map((task: Task) => (
-                        <div
-                          key={task.id}
-                          draggable
-                          onDragStart={() => handleDragStart(task, column.id)}
-                          className="rounded-md border bg-card shadow-sm transition-all hover:shadow-md cursor-grab active:cursor-grabbing"
-                        >
+                      {column.tasks?.map((task: Task) => {
+                        
+                        return (
                           <div
-                            className="p-3 space-y-3"
-                            onClick={() => {
-                              setSelectedTask(task);
-                            }}
+                            key={task.id}
+                            draggable
+                            onDragStart={() => handleDragStart(task, column.id)}
+                            className="rounded-md border bg-card shadow-sm transition-all hover:shadow-md cursor-grab active:cursor-grabbing"
                           >
-                            <div className="font-medium">{task.name}</div>
-                            <div className="flex items-center justify-between">
-                              {task.dueDate && (
-                                <div className="flex items-center text-xs text-muted-foreground">
-                                  <Calendar className="mr-1 h-3 w-3" />
-                                  {formatDate(task.dueDate)}
+                            <div
+                              className="p-3 space-y-3"
+                              onClick={() => {
+                                setSelectedTask(task);
+                              }}
+                            >
+                              <div className="font-medium">{task.name}</div>
+                              <div className="flex items-center justify-between">
+                                {task.dueDate && (
+                                  <div className="flex items-center text-xs text-muted-foreground">
+                                    <Calendar className="mr-1 h-3 w-3" />
+                                    {formatDate(task.dueDate)}
+                                  </div>
+                                )}
+                                <div
+                                  className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(
+                                    task.priority || ""
+                                  )}`}
+                                >
+                                  {task.priority}
+                                </div>
+                              </div>
+                              {task.assignedUserId && task.assignedUser && (
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-6 w-6">
+                                      <AvatarImage
+                                        src={`https://i.pravatar.cc/150?u=${task.assignedUser.firstName}`}
+                                        alt={task.assignedUser.firstName || ""}
+                                      />
+                                      <AvatarFallback>
+                                        {task.assignedUser.firstName?.[0] || ""}
+                                        {task.assignedUser.lastName?.[0] || ""}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-xs text-muted-foreground">
+                                      {task.assignedUser.firstName}{" "}
+                                      {task.assignedUser.lastName}
+                                    </span>
+                                  </div>
+                                  {task.comments?.length &&
+                                    task.comments.length > 0 && (
+                                      <div className="text-xs text-muted-foreground">
+                                        {task.comments.length} comment
+                                        {task.comments.length !== 1 ? "s" : ""}
+                                      </div>
+                                    )}
                                 </div>
                               )}
-                              <div
-                                className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(
-                                  task.priority || ""
-                                )}`}
-                              >
-                                {task.priority}
-                              </div>
                             </div>
-                            {task.assignedUserId && task.assignedUser && (
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-6 w-6">
-                                    <AvatarImage
-                                      src={`https://i.pravatar.cc/150?u=${task.assignedUser.firstName}`}
-                                      alt={task.assignedUser.firstName || ""}
-                                    />
-                                    <AvatarFallback>
-                                      {task.assignedUser.firstName?.[0] || ""}
-                                      {task.assignedUser.lastName?.[0] || ""}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="text-xs text-muted-foreground">
-                                    {task.assignedUser.firstName}{" "}
-                                    {task.assignedUser.lastName}
-                                  </span>
-                                </div>
-                                {task.comments?.length &&
-                                  task.comments.length > 0 && (
-                                    <div className="text-xs text-muted-foreground">
-                                      {task.comments.length} comment
-                                      {task.comments.length !== 1 ? "s" : ""}
-                                    </div>
-                                  )}
-                              </div>
-                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -562,16 +687,19 @@ export default function BoardPage() {
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-sm font-medium mb-2">Description</h3>
-                    <p className="text-sm text-muted-foreground">{selectedTask.description || "No description provided"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedTask.description || "No description provided"}
+                    </p>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <h3 className="text-sm font-medium mb-2">Due Date</h3>
                       <div className="flex items-center">
                         <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">
-                          {formatDate(selectedTask.dueDate || "") || "No due date"}
+                          {formatDate(selectedTask.dueDate || "") ||
+                            "No due date"}
                         </span>
                       </div>
                     </div>
@@ -609,7 +737,9 @@ export default function BoardPage() {
                           </span>
                         </>
                       ) : (
-                        <span className="text-sm text-muted-foreground">Unassigned</span>
+                        <span className="text-sm text-muted-foreground">
+                          Unassigned
+                        </span>
                       )}
                     </div>
                   </div>

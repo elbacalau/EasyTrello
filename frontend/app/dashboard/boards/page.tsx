@@ -31,19 +31,20 @@ import { fetchTasksFromBoard } from "@/lib/api/tasks";
 import { Task } from "@/types/tasks";
 import { ApiResponse, ApiResponseTypes } from "@/types/apiResponse";
 import { fetchBoards, fetchBoardStats } from "@/lib/api/board";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default function BoardsPage() {
   const userData: UserData = useAppSelector((state: RootState) => state.user);
 
   const [boards, setBoards] = useState<Board[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [taskStats, setTaskStats] = useState<Record<number, { completed: number, pending: number }>>({});
-
+  const [taskStats, setTaskStats] = useState<
+    Record<number, { completed: number; pending: number }>
+  >({});
 
   useEffect(() => {
     if (!userData.id) return;
     const loadBoardsAndStats = async () => {
-      
       const boardsRes = await fetchBoards(userData.id!);
       const boardsFetched = boardsRes.detail;
       setBoards(boardsFetched);
@@ -51,7 +52,8 @@ export default function BoardsPage() {
       const stats: Record<number, { completed: number; pending: number }> = {};
 
       for (const board of boardsFetched) {
-        const { result, detail }: ApiResponse<BoardStats> = await fetchBoardStats(board.id);
+        const { result, detail }: ApiResponse<BoardStats> =
+          await fetchBoardStats(board.id);
         if (result === ApiResponseTypes[ApiResponseTypes.success]) {
           stats[board.id] = {
             completed: detail.completedTasks,
@@ -64,7 +66,6 @@ export default function BoardsPage() {
 
     loadBoardsAndStats();
   }, [userData.id]);
-
 
   const [newBoard, setNewBoard] = useState({
     name: "",
@@ -95,6 +96,7 @@ export default function BoardsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">Boards</h1>
+
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -106,6 +108,7 @@ export default function BoardsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -179,6 +182,12 @@ export default function BoardsPage() {
         </div>
       </div>
 
+      <Breadcrumb
+        segments={[
+          { name: "Dashboard", href: "/dashboard" },
+          { name: "Boards", href: "/dashboard/boards", current: true },
+        ]}
+      />
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filteredBoards.map((board: Board) => (
@@ -201,10 +210,10 @@ export default function BoardsPage() {
                   {/* TASK COUNT */}
                   {(() => {
                     const total =
-                      (taskStats[board.id]?.completed ?? 0) + (taskStats[board.id]?.pending ?? 0);
+                      (taskStats[board.id]?.completed ?? 0) +
+                      (taskStats[board.id]?.pending ?? 0);
                     return `${total} ${total === 1 ? "task" : "tasks"}`;
                   })()}
-
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center text-sm text-muted-foreground">
@@ -213,10 +222,9 @@ export default function BoardsPage() {
                     {taskStats[board.id]?.completed || 0}
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <Clock className="mr-1 h-4 w-4" color="grey"/>
+                    <Clock className="mr-1 h-4 w-4" color="grey" />
                     {/* PENDING TASK */}
                     {taskStats[board.id]?.pending || 0}
-
                   </div>
                 </div>
               </CardFooter>
