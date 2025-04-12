@@ -1,5 +1,6 @@
-import { AssignedUser, Board, BoardColumn, BoardStats } from "@/types/userData";
+import { AssignedUser, Board, BoardStats } from "@/types/userData";
 import { fetchAPI } from "./httpClient";
+import { BoardColumn } from "@/types/boardColumn";
 
 export const fetchBoards = (userId: number) => {
   return fetchAPI<Board[]>(`/board/user/${userId}`, { method: "GET" });

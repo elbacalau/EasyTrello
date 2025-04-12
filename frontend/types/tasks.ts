@@ -7,8 +7,8 @@ export interface Task {
   createdAt?:      Date;
   updatedAt?:      null;
   dueDate?:        Date | null;
-  status?:         string;
-  priority?:       string;
+  status?:         TaskStatus;
+  priority?:       TaskPriority;
   completed?:      boolean;
   boardColumnId?:  number;
   columnName?:     string;
@@ -27,4 +27,31 @@ export interface Comment {
   createdAt: Date;
   userId:    number;
   userName:  string;
+}
+
+
+export interface CreateTaskRequest {
+  name: string;
+  description: string;
+  dueDate: Date;
+  priority: TaskPriority;
+  boardId: number;
+  boardColumnId: number;
+  assignedUserId: number;
+  completed?: boolean;
+  labels?: string[];
+  comments?: Comment[];
+}
+
+export enum TaskStatus {
+  ToDo = 1,
+  InProgress = 2,
+  Completed = 3,
+}
+
+export enum TaskPriority {
+  Low = 1,
+  Medium = 2,
+  High = 3,
+  Critical = 4,
 }

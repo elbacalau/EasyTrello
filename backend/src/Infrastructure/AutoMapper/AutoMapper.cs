@@ -82,8 +82,8 @@ namespace backend.src.Infrastructure.Mapper
             // map taskrequest to taskmodel
             CreateMap<TaskRequest, TaskModel>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Enum.Parse<Models.TaskStatus>(src.Status, true)))
-                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => Enum.Parse<TaskPriority>(src.Priority, true)));
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Enum.Parse<Models.TaskStatus>(src.Status.ToString(), true)))
+                .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => Enum.Parse<TaskPriority>(src.Priority.ToString(), true)));
 
             // map taskcommentrequest to taskcomment
             CreateMap<TaskCommentRequest, TaskComment>()

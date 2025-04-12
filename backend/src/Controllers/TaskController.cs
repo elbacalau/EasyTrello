@@ -41,10 +41,8 @@ namespace backend.src.Controllers
 
         // create task
         [HttpPost("create")]
-        public async Task<IActionResult> CreateTask([FromBody] TaskRequest request, int boardId, int columnId)
+        public async Task<IActionResult> CreateTask([FromBody] TaskRequest request)
         {
-            request.BoardId = boardId;
-            request.BoardColumnId = columnId;
             TaskResponse taskResponse = await _taskService.CreateTask(request);
             return Ok(new ApiResponse<TaskResponse>{
                 Result = "success",

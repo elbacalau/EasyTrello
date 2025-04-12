@@ -35,7 +35,7 @@ import { fetchAssignedUsersBoard, fetchBoardColumns } from "@/lib/api/board";
 import { Params } from "next/dist/shared/lib/router/utils/route-matcher";
 import { ApiResponse, ApiResponseTypes } from "@/types/apiResponse";
 import { AssignedUser, Board, UserData } from "@/types/userData";
-import { Comment, Task } from "@/types/tasks";
+import { Comment, Task, TaskStatus, TaskPriority, CreateTaskRequest } from "@/types/tasks";
 import { BoardColumn } from "@/types/boardColumn";
 import { moveToColumn } from "@/lib/api/tasks";
 import { useAppSelector } from "@/types/hooks";
@@ -62,19 +62,21 @@ export default function BoardPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
-  const [newTask, setNewTask] = useState<{
-    title: string;
-    description: string;
-    dueDate: string;
-    priority: string;
-    assignee: AssignedUser | undefined;
-  }>({
-    title: "",
+  
+  const [newTask, setNewTask] = useState<CreateTaskRequest>({
+    name: "",
     description: "",
-    dueDate: "",
-    priority: "Medium",
-    assignee: undefined,
+    dueDate: new Date(),
+    priority: TaskPriority.Medium,
+    boardId: parseInt(params.id),
+    boardColumnId: 0,
+    assignedUserId: 0,
+    completed: false,
+    labels: [],
+    comments: [],
   });
+
+  
   const [newComment, setNewComment] = useState("");
   const [draggedTask, setDraggedTask] = useState<Task | undefined>(undefined);
   const [draggedColumn, setDraggedColumn] = useState<number | undefined>(
@@ -84,7 +86,7 @@ export default function BoardPage() {
   const userData: UserData = useAppSelector((state) => state.user);
   const currentBoard: Board | undefined = useMemo(() => {
     return userData?.boards.find((board) => board.id === parseInt(params.id));
-  }, [params.id]);
+  }, [params.id, userData]);
 
   const {
     permissions,
@@ -160,7 +162,16 @@ export default function BoardPage() {
       });
 
       setColumns(finalColumns);
-      console.log(columns);
+      
+      if (selectedMember) {
+        const filtered = finalColumns.map(column => ({
+          ...column,
+          tasks: column.tasks?.filter(task => task.assignedUserId === selectedMember.id) || []
+        }));
+        setFilteredColumns(filtered);
+      } else {
+        setFilteredColumns(finalColumns);
+      }
 
       moveToColumn(
         draggedTask.id!,
@@ -174,19 +185,18 @@ export default function BoardPage() {
   };
 
   const handleAddTask = (columnId: number | undefined) => {
-    if (newTask.title.trim() === "" || columnId === undefined) return;
+    if (newTask.name.trim() === "" || columnId === undefined) return;
 
     const task: Task = {
       id: Math.floor(Math.random() * 1000),
-      name: newTask.title,
+      name: newTask.name,
       description: newTask.description,
       createdAt: new Date(),
       updatedAt: null,
       dueDate: newTask.dueDate ? new Date(newTask.dueDate) : null,
       priority: newTask.priority,
-      status: "Active",
-      assignedUserId: newTask.assignee?.id!,
-      assignedUser: newTask.assignee!,
+      status: TaskStatus.ToDo,
+      assignedUserId: newTask.assignedUserId,
       boardId: parseInt(params.id),
       boardColumnId: columnId,
       comments: [],
@@ -205,16 +215,22 @@ export default function BoardPage() {
 
     setColumns(updatedColumns);
     setNewTask({
-      title: "",
+      name: "",
       description: "",
-      dueDate: "",
-      priority: "Medium",
-      assignee: undefined,
+      dueDate: new Date(),
+      priority: TaskPriority.Medium,
+      boardId: parseInt(params.id),
+      boardColumnId: columnId,
+      assignedUserId: newTask.assignedUserId,
+      completed: false,
+      labels: [],
+      comments: [],
     });
     setIsNewTaskDialogOpen(false);
 
     if (can(PermissionType.CreateTask)) {
       // TODO: Call API to create a new task on the server
+      console.log({ ...newTask, boardColumnId: columnId });
     }
   };
 
@@ -280,13 +296,15 @@ export default function BoardPage() {
     }
   };
 
-  const getPriorityColor = (priority: string): string => {
+  const getPriorityColor = (priority: TaskPriority): string => {
     switch (priority) {
-      case "High":
+      case TaskPriority.Critical:
         return "bg-destructive/10 text-destructive";
-      case "Medium":
+      case TaskPriority.High:
+        return "bg-destructive/10 text-destructive";
+      case TaskPriority.Medium:
         return "bg-amber-500/10 text-amber-500";
-      case "Low":
+      case TaskPriority.Low:
         return "bg-green-500/10 text-green-500";
       default:
         return "bg-muted text-muted-foreground";
@@ -507,11 +525,11 @@ export default function BoardPage() {
                               <Input
                                 id="title"
                                 placeholder="Enter task title"
-                                value={newTask.title}
+                                value={newTask.name}
                                 onChange={(e) =>
                                   setNewTask({
                                     ...newTask,
-                                    title: e.target.value,
+                                    name: e.target.value,
                                   })
                                 }
                               />
@@ -535,11 +553,11 @@ export default function BoardPage() {
                               <Input
                                 id="dueDate"
                                 type="date"
-                                value={newTask.dueDate}
+                                value={newTask.dueDate.toISOString()}
                                 onChange={(e) =>
                                   setNewTask({
                                     ...newTask,
-                                    dueDate: e.target.value,
+                                    dueDate: new Date(e.target.value),
                                   })
                                 }
                               />
@@ -547,18 +565,19 @@ export default function BoardPage() {
                             <div className="grid gap-2">
                               <Label htmlFor="priority">Priority</Label>
                               <Select
-                                value={newTask.priority}
+                                value={newTask.priority.toString()}
                                 onValueChange={(value) =>
-                                  setNewTask({ ...newTask, priority: value })
+                                  setNewTask({ ...newTask, priority: parseInt(value) as TaskPriority })
                                 }
                               >
                                 <SelectTrigger id="priority">
                                   <SelectValue placeholder="Select priority" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="High">High</SelectItem>
-                                  <SelectItem value="Medium">Medium</SelectItem>
-                                  <SelectItem value="Low">Low</SelectItem>
+                                  <SelectItem value={TaskPriority.Low.toString()}>Low</SelectItem>
+                                  <SelectItem value={TaskPriority.Medium.toString()}>Medium</SelectItem>
+                                  <SelectItem value={TaskPriority.High.toString()}>High</SelectItem>
+                                  <SelectItem value={TaskPriority.Critical.toString()}>Critical</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -569,7 +588,7 @@ export default function BoardPage() {
                                   const assignee = teamMembers.find(
                                     (member) => member.id.toString() === value
                                   );
-                                  setNewTask({ ...newTask, assignee });
+                                  setNewTask({ ...newTask, assignedUserId: assignee?.id! });
                                 }}
                               >
                                 <SelectTrigger id="assignee">
@@ -632,7 +651,7 @@ export default function BoardPage() {
                                 )}
                                 <div
                                   className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(
-                                    task.priority || ""
+                                    task.priority!
                                   )}`}
                                 >
                                   {task.priority}
@@ -657,12 +676,17 @@ export default function BoardPage() {
                                     </span>
                                   </div>
                                   {task.comments?.length &&
-                                    task.comments.length > 0 && (
+                                    task.comments.length > 0  ? (
                                       <div className="text-xs text-muted-foreground">
                                         {task.comments.length} comment
                                         {task.comments.length !== 1 ? "s" : ""}
                                       </div>
+                                    ): (
+                                      <div className="text-xs text-muted-foreground">
+                                        No comments
+                                      </div>
                                     )}
+                                  
                                 </div>
                               )}
                             </div>
@@ -707,11 +731,11 @@ export default function BoardPage() {
                       <h3 className="text-sm font-medium mb-2">Priority</h3>
                       <div
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(
-                          selectedTask.priority || ""
+                          selectedTask.priority || TaskPriority.Medium
                         )}`}
                       >
                         <Tag className="mr-1 h-3 w-3" />
-                        {selectedTask.priority}
+                        {selectedTask.priority ? TaskPriority[selectedTask.priority] : "Medium"}
                       </div>
                     </div>
                   </div>
