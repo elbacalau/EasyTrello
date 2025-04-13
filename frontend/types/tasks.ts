@@ -29,6 +29,10 @@ export interface Comment {
   userName:  string;
 }
 
+export interface CreateComment {
+  comment: string;
+}
+
 
 export interface CreateTaskRequest {
   name: string;

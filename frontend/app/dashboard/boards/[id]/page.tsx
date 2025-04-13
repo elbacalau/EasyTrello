@@ -42,7 +42,13 @@ import {
   CreateTaskRequest,
 } from "@/types/tasks";
 import { BoardColumn } from "@/types/boardColumn";
-import { createTask, deleteTask, moveToColumn } from "@/lib/api/tasks";
+import {
+  addTaskComment,
+  createTask,
+  deleteTask,
+  moveToColumn,
+  TaskServiceProps,
+} from "@/lib/api/tasks";
 import { useAppDispatch, useAppSelector } from "@/types/hooks";
 import { PermissionType } from "@/types/permissionEnum";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -54,6 +60,7 @@ import {
 } from "@/components/ui/hover-card";
 import { addNotification } from "@/store/slices/notificationSlice";
 import SelectedTaskCard from "@/components/selected-task";
+import { toast } from "sonner";
 
 // Sample data for the board
 
@@ -255,51 +262,62 @@ export default function BoardPage() {
     }
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (newComment.trim() === "" || !selectedTask) return;
+    if (!currentBoard) return;
 
-    const currentUser = teamMembers.length > 0 ? teamMembers[0] : null;
-    if (!currentUser) return;
+    const boardId = currentBoard.id;
+    const taskId = selectedTask.id;
 
-    const comment: Comment = {
-      id: Math.floor(Math.random() * 1000),
-      comment: newComment,
-      createdAt: new Date(),
-      userId: currentUser.id,
-      userName: `${currentUser.firstName} ${currentUser.lastName}`,
-    };
+    try {
+      if (can(PermissionType.CreateComment)) {
+        await addTaskComment({ boardId, taskId }, newComment);
+        setNewComment("");
+        await loadColumns();
+        const freshColumns = await fetchBoardColumns(parseInt(params.id));
 
-    const updatedColumns = columns.map((col) => {
-      return {
-        ...col,
-        tasks:
-          col.tasks?.map((task) => {
-            if (task.id === selectedTask.id) {
-              return {
-                ...task,
-                comments: [...(task.comments || []), comment],
-              };
+        if (
+          freshColumns.result === ApiResponseTypes[ApiResponseTypes.success]
+        ) {
+          let updatedTask: Task | undefined;
+
+          for (const column of freshColumns.detail) {
+            const found = column.tasks?.find((t) => t.id === taskId);
+            if (found) {
+              updatedTask = found;
+              break;
             }
-            return task;
-          }) || [],
-      };
-    });
+          }
 
-    setColumns(updatedColumns);
-    setNewComment("");
+          if (updatedTask) {
+            setSelectedTask(updatedTask);
+          }
+        }
 
-    const updatedTask = updatedColumns
-      .flatMap((col) => col.tasks || [])
-      .find((task) => task && task.id === selectedTask.id);
-
-    if (updatedTask) {
-      setSelectedTask(updatedTask);
-    }
-
-    if (can(PermissionType.CreateComment)) {
-      // TODO: Call API to add a comment on the server
+        dispatch(
+          addNotification({
+            type: "success",
+            title: "Éxito",
+            message: "Comentario añadido correctamente",
+            duration: 5000,
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Error al agregar comentario:", error);
+      dispatch(
+        addNotification({
+          type: "error",
+          title: "Error",
+          message: "Error al crear el comentario",
+          duration: 5000,
+        })
+      );
     }
   };
+
+
+
 
   const handleSelectMember = (member: AssignedUser) => {
     if (member.id === null) return;
@@ -373,21 +391,25 @@ export default function BoardPage() {
   };
 
   const getPriorityColor = (priority: any): string => {
-    if (typeof priority === 'string') {
-      if (priority === 'Low' || priority === 'low') return "bg-green-500/10 text-green-500";
-      if (priority === 'Medium' || priority === 'medium') return "bg-amber-500/10 text-amber-500";
-      if (priority === 'High' || priority === 'high') return "bg-destructive/10 text-destructive";
-      if (priority === 'Critical' || priority === 'critical') return "bg-destructive/10 text-destructive";
+    if (typeof priority === "string") {
+      if (priority === "Low" || priority === "low")
+        return "bg-green-500/10 text-green-500";
+      if (priority === "Medium" || priority === "medium")
+        return "bg-amber-500/10 text-amber-500";
+      if (priority === "High" || priority === "high")
+        return "bg-destructive/10 text-destructive";
+      if (priority === "Critical" || priority === "critical")
+        return "bg-destructive/10 text-destructive";
     }
-    
+
     const priorityNum = Number(priority);
     if (!isNaN(priorityNum)) {
       if (priorityNum === 4) return "bg-destructive/10 text-destructive"; // Critical
       if (priorityNum === 3) return "bg-destructive/10 text-destructive"; // High
-      if (priorityNum === 2) return "bg-amber-500/10 text-amber-500";    // Medium
-      if (priorityNum === 1) return "bg-green-500/10 text-green-500";    // Low
+      if (priorityNum === 2) return "bg-amber-500/10 text-amber-500"; // Medium
+      if (priorityNum === 1) return "bg-green-500/10 text-green-500"; // Low
     }
-    
+
     return "bg-muted text-muted-foreground";
   };
 
@@ -410,6 +432,54 @@ export default function BoardPage() {
       hour: "numeric",
       minute: "numeric",
     });
+  };
+
+  const handleDeleteComment = async (commentId: number, taskId: number) => {
+    if (!currentBoard || !taskId || !commentId) return;
+    
+    try {
+      // Aquí añadirías la llamada a la API para eliminar el comentario
+      // Por ejemplo: await deleteTaskComment({ boardId: currentBoard.id, taskId, commentId });
+      
+      // Por ahora, solo mostraremos una notificación y recargaremos los datos
+      console.log(`Eliminando comentario ${commentId} de la tarea ${taskId}`);
+      
+      dispatch(
+        addNotification({
+          type: "success",
+          title: "Éxito",
+          message: "Comentario eliminado correctamente",
+          duration: 5000,
+        })
+      );
+      
+      // Recargar los datos
+      await loadColumns();
+      
+      // Buscar la tarea actualizada y seleccionarla
+      const freshColumns = await fetchBoardColumns(parseInt(params.id));
+      
+      if (freshColumns.result === ApiResponseTypes[ApiResponseTypes.success]) {
+        // Buscar la tarea actualizada en todas las columnas
+        for (const column of freshColumns.detail) {
+          const found = column.tasks?.find(t => t.id === taskId);
+          if (found) {
+            setSelectedTask(found);
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error al eliminar comentario:", error);
+      dispatch(
+        addNotification({
+          type: "error",
+          title: "Error",
+          message: "No se pudo eliminar el comentario",
+          duration: 5000,
+        })
+      );
+    }
   };
 
   return (
@@ -549,7 +619,8 @@ export default function BoardPage() {
         {(selectedMember || searchTerm.length > 0) && (
           <div className="ml-4 flex items-center gap-2">
             <span className="text-sm">
-              {selectedMember && `Filtrado por: ${selectedMember.firstName} ${selectedMember.lastName}`}
+              {selectedMember &&
+                `Filtrado por: ${selectedMember.firstName} ${selectedMember.lastName}`}
             </span>
             <Button
               variant="ghost"
@@ -557,7 +628,7 @@ export default function BoardPage() {
               onClick={() => {
                 setSelectedMember(null);
                 setFilteredColumns(columns);
-                setSearchTerm('');
+                setSearchTerm("");
               }}
             >
               Limpiar filtro
@@ -683,6 +754,9 @@ export default function BoardPage() {
         {/* CARGAMOS COMPONENTE DE LA TAREA SELECCIONADA */}
         {selectedTask && (
           <SelectedTaskCard
+            key={`task-${selectedTask.id}-${
+              selectedTask.comments?.length || 0
+            }`}
             selectedTask={selectedTask}
             newComment={newComment}
             columnId={selectedTask.boardColumnId || 0}
@@ -692,6 +766,7 @@ export default function BoardPage() {
             formatCommentTime={formatCommentTime}
             getPriorityColor={getPriorityColor}
             handleDeleteTask={handleDeleteTask}
+            handleDeleteComment={handleDeleteComment}
           />
         )}
       </div>

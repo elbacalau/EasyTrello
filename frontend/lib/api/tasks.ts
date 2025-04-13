@@ -1,8 +1,8 @@
 import { CreateTaskRequest, Task } from "@/types/tasks";
 import { fetchAPI, API_URL } from "./httpClient";
-interface TaskServiceProps {
+export interface TaskServiceProps {
   boardId: number;
-  columnId: number;
+  columnId?: number;
   taskId?: number;
 }
 
@@ -26,8 +26,18 @@ export const createTask = async (newTask: CreateTaskRequest) => {
 }
 
 export const deleteTask = async (taskProps: TaskServiceProps) => {
-  console.log(taskProps);
-  
   const { boardId, columnId, taskId }: TaskServiceProps = taskProps;
   await fetchAPI(`/board/${boardId}/column/${columnId}/task/${taskId}`, { method: "DELETE" });
 }
+
+export const addTaskComment = async (taskProps: TaskServiceProps, comment: string): Promise<void> => {
+  const { boardId, taskId }: TaskServiceProps = taskProps;
+  const body: { [key: string]: string } = { "comment": comment }
+  await fetchAPI<void>(`/board/${boardId}/task/comment/${taskId}`, { method: "POST",  body})
+}
+
+export const deleteTaskComment = async (taskProps: TaskServiceProps, comment: string): Promise<void> => {
+  const { boardId, taskId }: TaskServiceProps = taskProps;
+  await fetchAPI<void>(`/board/${boardId}/task/comment/${taskId}`, { method: "DELETE" })
+}
+

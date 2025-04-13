@@ -1,11 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Tag, Trash2 } from "lucide-react";
+import { Calendar, Tag, Trash2, X } from "lucide-react";
 import { Task, Comment } from "@/types/tasks";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface SelectedTaskCardProps {
   selectedTask: Task;
@@ -16,8 +15,61 @@ interface SelectedTaskCardProps {
   formatDate: (dateString: string | Date | null) => string;
   formatCommentTime: (timestamp: string | Date | null) => string;
   getPriorityColor: (priority: number) => string;
-  handleDeleteTask: (taskId: number, columnId: number) => void
+  handleDeleteTask: (taskId: number, columnId: number) => void;
+  handleDeleteComment: (commentId: number, taskId: number) => void;
 }
+
+const CommentItem = ({ 
+  comment, 
+  formatCommentTime, 
+  onDelete 
+}: { 
+  comment: Comment, 
+  formatCommentTime: (timestamp: string | Date | null) => string,
+  onDelete: (commentId: number) => void
+}) => {
+  const [showDelete, setShowDelete] = useState(false);
+  
+  return (
+    <div 
+      className="flex gap-3 group relative p-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+      onMouseEnter={() => setShowDelete(true)}
+      onMouseLeave={() => setShowDelete(false)}
+    >
+      <Avatar className="h-8 w-8">
+        <AvatarImage
+          src={`https://i.pravatar.cc/150?u=${comment.userName}`}
+          alt={comment.userName}
+        />
+        <AvatarFallback>
+          {comment.userName.charAt(0)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1 space-y-1">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">
+            {comment.userName}
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {formatCommentTime(comment.createdAt)}
+            </span>
+            {showDelete && (
+              <button 
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700"
+                onClick={() => onDelete(comment.id!)}
+                aria-label="Eliminar comentario"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+        <p className="text-sm">{comment.comment}</p>
+      </div>
+    </div>
+  );
+};
 
 const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
   selectedTask,
@@ -29,11 +81,20 @@ const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
   getPriorityColor,
   handleDeleteTask,
   columnId,
+  handleDeleteComment,
 }) => {
+
+  useEffect(() => {
+  }, [selectedTask]);
+
+  const onDeleteComment = (commentId: number) => {
+    handleDeleteComment(commentId, selectedTask.id!);
+  };
+
   return (
     <div className="w-[calc(50%-16rem)] h-fit">
-      <Card className="h-full">
-        <CardHeader>
+      <Card className="h-[calc(80vh-7rem)] flex flex-col">
+        <CardHeader className="flex-shrink-0">
           <div className="flex flex-row justify-between items-center">
             <CardTitle className="mr-4">{selectedTask.name}</CardTitle>
 
@@ -46,7 +107,7 @@ const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="overflow-y-auto max-h-[calc(100vh-300px)]">
+        <CardContent className="overflow-y-auto flex-grow">
           <div className="space-y-6">
             <div>
               <h3 className="text-sm font-medium mb-2">Description</h3>
@@ -106,7 +167,7 @@ const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
               </div>
             </div>
 
-            <div>
+            <div >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium">Comments</h3>
                 <span className="text-xs text-muted-foreground">
@@ -114,30 +175,14 @@ const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
                   {(selectedTask.comments?.length || 0) !== 1 ? "s" : ""}
                 </span>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 mb-4">
                 {selectedTask.comments?.map((comment: Comment) => (
-                  <div key={comment.id} className="flex gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage
-                        src={`https://i.pravatar.cc/150?u=${comment.userName}`}
-                        alt={comment.userName}
-                      />
-                      <AvatarFallback>
-                        {comment.userName.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">
-                          {comment.userName}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatCommentTime(comment.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-sm">{comment.comment}</p>
-                    </div>
-                  </div>
+                  <CommentItem 
+                    key={comment.id} 
+                    comment={comment} 
+                    formatCommentTime={formatCommentTime} 
+                    onDelete={onDeleteComment}
+                  />
                 ))}
               </div>
               <div className="flex gap-2 mt-4">
