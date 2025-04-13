@@ -8,36 +8,43 @@ namespace backend.src.Controllers
 
 {
     [ApiController]
-    [Route("api/board/{boardId}/task/comment")]
+    [Route("api/board/{boardId}/task/{taskId}/comment")]
     [Authorize]
     public class TaskCommentController(TaskCommentService taskCommentService) : ControllerBase
     {
         private readonly TaskCommentService _taskCommentService = taskCommentService;
 
-
-        [HttpPost("{taskId}")]
+        
+        [HttpPost("")]
         public async Task<IActionResult> CreateComment(int taskId, [FromBody] TaskCommentRequest  request)
         {
             TaskCommentResponse comment = await _taskCommentService.CreateCommentAsync(request, taskId);
-
             return Ok(new ApiResponse<TaskCommentResponse>{
                 Detail = comment,
                 Result = "success"
             });
         }
 
-        [HttpDelete("{taskId}")]
-        public async Task<IActionResult> DeleteCommentAsync(int taskId)
+        [HttpDelete("all")]
+        public async Task<IActionResult> DeleteAllCommentsFromTask(int taskId)
         {
-            await _taskCommentService.DeleteCommentAsync(taskId);
+            await _taskCommentService.DeleteAllComments(taskId);
             return NoContent();
         }
 
-
-        [HttpPost("{taskId}/find")]
-        public async Task<IActionResult> GetCommentById(int taskId, [FromBody] CommentRequest request)
+        [HttpDelete("{commentId}")]
+        public async Task<IActionResult> DeleteCommentFromTask(int commentId, int taskId)
         {
-            TaskCommentResponse comment = await _taskCommentService.GetCommentByIdAsync(taskId, request);
+            await _taskCommentService.DeleteComment(taskId, commentId);
+            return NoContent();
+        }
+        
+
+
+        [HttpGet("{commentId}")]
+        public async Task<IActionResult> GetCommentById(int commentId, int taskId)
+        {
+            TaskCommentResponse comment = await _taskCommentService.GetCommentByIdAsync(taskId, commentId);
 
             return Ok(new ApiResponse<TaskCommentResponse>{
                 Detail = comment,
@@ -45,7 +52,7 @@ namespace backend.src.Controllers
             });
         }
 
-        [HttpGet("{taskId}")]
+        [HttpGet("")]
         public async Task<IActionResult> GetCommentsByTaskId(int taskId)
         {
             IEnumerable<TaskCommentResponse> comments = await _taskCommentService.GetCommentsByTaskIdAsync(taskId);
@@ -57,11 +64,10 @@ namespace backend.src.Controllers
         }
 
 
-        [HttpPut("{taskId}/updateComment")]
-        public async Task<IActionResult> UpdateComment(int taskId, [FromBody] CommentRequest request)
+        [HttpPut("updateComment/{commentId}")]
+        public async Task<IActionResult> UpdateComment(int commentId, int taskId, [FromBody] CommentRequest request)
         {
-            TaskCommentResponse comment = await _taskCommentService.UpdateCommentAsync(taskId, request);
-
+            TaskCommentResponse comment = await _taskCommentService.UpdateCommentAsync(taskId, request, commentId);
             return Ok(new ApiResponse<TaskCommentResponse>{
                 Detail = comment,
                 Result = "success"

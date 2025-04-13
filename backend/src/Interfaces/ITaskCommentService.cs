@@ -7,9 +7,10 @@ namespace backend.src.Interfaces
     public interface ITaskCommentService
     {
         Task<TaskCommentResponse> CreateCommentAsync(TaskCommentRequest comment, int taskId);
-        Task<TaskCommentResponse> GetCommentByIdAsync(int id,  CommentRequest request);
+        Task<TaskCommentResponse> GetCommentByIdAsync(int taskId, int commentId);
         Task<IEnumerable<TaskCommentResponse>> GetCommentsByTaskIdAsync(int taskId);
-        Task<TaskCommentResponse> UpdateCommentAsync(int taskId, CommentRequest request);
-        Task DeleteCommentAsync(int id);
+        Task<TaskCommentResponse> UpdateCommentAsync(int taskId, CommentRequest request, int commentId);
+        Task DeleteAllComments(int id);
+        Task DeleteComment(int taskId, int commentId);
     }
 }
