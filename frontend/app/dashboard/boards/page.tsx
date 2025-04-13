@@ -27,10 +27,10 @@ import { Plus, Search, Trello, CheckCircle2, Clock } from "lucide-react";
 import { Board, BoardStats, UserData } from "@/types/userData";
 import { useAppSelector } from "@/types/hooks";
 import { RootState } from "@/store/store";
-import { fetchTasksFromBoard } from "@/lib/api/tasks";
+import { fetchTasksFromBoard } from "@/lib/api/taskService";
 import { Task } from "@/types/tasks";
 import { ApiResponse, ApiResponseTypes } from "@/types/apiResponse";
-import { fetchBoards, fetchBoardStats } from "@/lib/api/board";
+import { fetchBoards, fetchBoardStats } from "@/lib/api/boardService";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default function BoardsPage() {

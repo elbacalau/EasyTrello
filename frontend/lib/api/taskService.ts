@@ -33,11 +33,11 @@ export const deleteTask = async (taskProps: TaskServiceProps) => {
 export const addTaskComment = async (taskProps: TaskServiceProps, comment: string): Promise<void> => {
   const { boardId, taskId }: TaskServiceProps = taskProps;
   const body: { [key: string]: string } = { "comment": comment }
-  await fetchAPI<void>(`/board/${boardId}/task/comment/${taskId}`, { method: "POST",  body})
+  await fetchAPI<void>(`/board/${boardId}/task/${taskId}/comment`, { method: "POST",  body})
 }
 
-export const deleteTaskComment = async (taskProps: TaskServiceProps, comment: string): Promise<void> => {
+export const deleteTaskComment = async (taskProps: TaskServiceProps, commentId: number): Promise<void> => {
   const { boardId, taskId }: TaskServiceProps = taskProps;
-  await fetchAPI<void>(`/board/${boardId}/task/comment/${taskId}`, { method: "DELETE" })
+  await fetchAPI<void>(`/board/${boardId}/task/${taskId}/comment/${commentId}`, { method: "DELETE" })
 }
 

@@ -30,7 +30,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus, MoreHorizontal, Calendar, User, Tag } from "lucide-react";
-import { fetchAssignedUsersBoard, fetchBoardColumns } from "@/lib/api/board";
+import {
+  fetchAssignedUsersBoard,
+  fetchBoardColumns,
+} from "@/lib/api/boardService";
 import { Params } from "next/dist/shared/lib/router/utils/route-matcher";
 import { ApiResponse, ApiResponseTypes } from "@/types/apiResponse";
 import { AssignedUser, Board, UserData } from "@/types/userData";
@@ -46,9 +49,10 @@ import {
   addTaskComment,
   createTask,
   deleteTask,
+  deleteTaskComment,
   moveToColumn,
   TaskServiceProps,
-} from "@/lib/api/tasks";
+} from "@/lib/api/taskService";
 import { useAppDispatch, useAppSelector } from "@/types/hooks";
 import { PermissionType } from "@/types/permissionEnum";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -61,6 +65,7 @@ import {
 import { addNotification } from "@/store/slices/notificationSlice";
 import SelectedTaskCard from "@/components/selected-task";
 import { toast } from "sonner";
+import { hasPermission } from "@/types/permission";
 
 // Sample data for the board
 
@@ -316,9 +321,6 @@ export default function BoardPage() {
     }
   };
 
-
-
-
   const handleSelectMember = (member: AssignedUser) => {
     if (member.id === null) return;
 
@@ -436,51 +438,74 @@ export default function BoardPage() {
 
   const handleDeleteComment = async (commentId: number, taskId: number) => {
     if (!currentBoard || !taskId || !commentId) return;
+
     
-    try {
-      // Aquí añadirías la llamada a la API para eliminar el comentario
-      // Por ejemplo: await deleteTaskComment({ boardId: currentBoard.id, taskId, commentId });
-      
-      // Por ahora, solo mostraremos una notificación y recargaremos los datos
-      console.log(`Eliminando comentario ${commentId} de la tarea ${taskId}`);
-      
-      dispatch(
-        addNotification({
-          type: "success",
-          title: "Éxito",
-          message: "Comentario eliminado correctamente",
-          duration: 5000,
-        })
-      );
-      
-      // Recargar los datos
-      await loadColumns();
-      
-      // Buscar la tarea actualizada y seleccionarla
-      const freshColumns = await fetchBoardColumns(parseInt(params.id));
-      
-      if (freshColumns.result === ApiResponseTypes[ApiResponseTypes.success]) {
-        // Buscar la tarea actualizada en todas las columnas
-        for (const column of freshColumns.detail) {
-          const found = column.tasks?.find(t => t.id === taskId);
-          if (found) {
-            setSelectedTask(found);
-            break;
+
+    if (can(PermissionType.DeleteComment)) {
+      try {
+        await deleteTaskComment(
+          { boardId: currentBoard.id, taskId },
+          commentId
+        );
+        dispatch(
+          addNotification({
+            type: "success",
+            title: "Éxito",
+            message: "Comentario eliminado correctamente",
+            duration: 5000,
+          })
+        );
+
+        await loadColumns();
+
+        const freshColumns = await fetchBoardColumns(parseInt(params.id));
+
+        if (
+          freshColumns.result === ApiResponseTypes[ApiResponseTypes.success]
+        ) {
+          for (const column of freshColumns.detail) {
+            const found = column.tasks?.find((t) => t.id === taskId);
+            if (found) {
+              setSelectedTask(found);
+              break;
+            }
           }
         }
+      } catch (error) {
+        console.error("Error al eliminar comentario:", error);
+        dispatch(
+          addNotification({
+            type: "error",
+            title: "Error",
+            message: "No se pudo eliminar el comentario",
+            duration: 5000,
+          })
+        );
       }
-    } catch (error) {
-      console.error("Error al eliminar comentario:", error);
+    } else {
       dispatch(
         addNotification({
           type: "error",
           title: "Error",
-          message: "No se pudo eliminar el comentario",
+          message: "No tienes permisos para eliminar comentarios",
           duration: 5000,
         })
       );
     }
   };
+
+  const handleCanDeleteComment = (commentId: number): boolean => {
+    if (isAdminOrOwner()) {
+      return true;
+    }
+    
+    if (!selectedTask || !userData.id) return false;
+    
+    const comment = selectedTask.comments?.find(c => c.id === commentId);
+    if (!comment) return false;
+    
+    return comment.userId === userData.id;
+  }
 
   return (
     <div className="space-y-6">
@@ -767,6 +792,7 @@ export default function BoardPage() {
             getPriorityColor={getPriorityColor}
             handleDeleteTask={handleDeleteTask}
             handleDeleteComment={handleDeleteComment}
+            canDeleteComment={handleCanDeleteComment}
           />
         )}
       </div>

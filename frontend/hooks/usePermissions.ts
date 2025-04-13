@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Permission, hasPermission, hasRole, isOwner, isAdminOrOwner } from '../types/permission';
 import { PermissionType, BoardRole } from '../types/permissionEnum';
-import { getPermissions } from '@/lib/api/auth';
+import { getPermissions } from '@/lib/api/authService';
 
 
 export const usePermissions = (boardId?: number) => {

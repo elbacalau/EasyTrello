@@ -1,5 +1,5 @@
 "use client";
-import { apiLogin, apiUserData } from "@/lib/api/auth";
+import { apiLogin, apiUserData } from "@/lib/api/authService";
 import { hideLoader, showLoader } from "@/store/slices/loaderSlice";
 import { setUser } from "@/store/slices/userSlice";
 import { ApiResponse } from "@/types/apiResponse";

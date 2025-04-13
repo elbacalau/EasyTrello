@@ -5,11 +5,13 @@ import { Calendar, Tag, Trash2, X } from "lucide-react";
 import { Task, Comment } from "@/types/tasks";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PermissionType } from "@/types/permissionEnum";
 
 interface SelectedTaskCardProps {
   selectedTask: Task;
   newComment: string;
-  columnId: number
+  columnId: number;
+  canDeleteComment: (commentId: number) => boolean;
   setNewComment: (comment: string) => void;
   handleAddComment: () => void;
   formatDate: (dateString: string | Date | null) => string;
@@ -19,19 +21,23 @@ interface SelectedTaskCardProps {
   handleDeleteComment: (commentId: number, taskId: number) => void;
 }
 
-const CommentItem = ({ 
-  comment, 
-  formatCommentTime, 
-  onDelete 
-}: { 
-  comment: Comment, 
-  formatCommentTime: (timestamp: string | Date | null) => string,
-  onDelete: (commentId: number) => void
+const CommentItem = ({
+  comment,
+  formatCommentTime,
+  onDelete,
+  canDeleteComment
+}: {
+  comment: Comment;
+  formatCommentTime: (timestamp: string | Date | null) => string;
+  onDelete: (commentId: number) => void;
+  canDeleteComment: (commentId: number) => boolean;
 }) => {
   const [showDelete, setShowDelete] = useState(false);
   
+  const canDelete = canDeleteComment(comment.id);
+
   return (
-    <div 
+    <div
       className="flex gap-3 group relative p-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
       onMouseEnter={() => setShowDelete(true)}
       onMouseLeave={() => setShowDelete(false)}
@@ -41,21 +47,18 @@ const CommentItem = ({
           src={`https://i.pravatar.cc/150?u=${comment.userName}`}
           alt={comment.userName}
         />
-        <AvatarFallback>
-          {comment.userName.charAt(0)}
-        </AvatarFallback>
+        <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
       </Avatar>
       <div className="flex-1 space-y-1">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">
-            {comment.userName}
-          </span>
+          <span className="text-sm font-medium">{comment.userName}</span>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
               {formatCommentTime(comment.createdAt)}
             </span>
-            {showDelete && (
-              <button 
+
+            {showDelete && canDelete && (
+              <button
                 className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700"
                 onClick={() => onDelete(comment.id!)}
                 aria-label="Eliminar comentario"
@@ -82,10 +85,9 @@ const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
   handleDeleteTask,
   columnId,
   handleDeleteComment,
+  canDeleteComment,
 }) => {
-
-  useEffect(() => {
-  }, [selectedTask]);
+  useEffect(() => {}, [selectedTask]);
 
   const onDeleteComment = (commentId: number) => {
     handleDeleteComment(commentId, selectedTask.id!);
@@ -98,8 +100,8 @@ const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
           <div className="flex flex-row justify-between items-center">
             <CardTitle className="mr-4">{selectedTask.name}</CardTitle>
 
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="hover:text-red-700 p-2 h-auto"
               onClick={() => handleDeleteTask(selectedTask.id!, columnId)}
             >
@@ -167,7 +169,7 @@ const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
               </div>
             </div>
 
-            <div >
+            <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium">Comments</h3>
                 <span className="text-xs text-muted-foreground">
@@ -175,13 +177,15 @@ const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
                   {(selectedTask.comments?.length || 0) !== 1 ? "s" : ""}
                 </span>
               </div>
+
               <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 mb-4">
                 {selectedTask.comments?.map((comment: Comment) => (
-                  <CommentItem 
-                    key={comment.id} 
-                    comment={comment} 
-                    formatCommentTime={formatCommentTime} 
+                  <CommentItem
+                    key={comment.id}
+                    comment={comment}
+                    formatCommentTime={formatCommentTime}
                     onDelete={onDeleteComment}
+                    canDeleteComment={canDeleteComment}
                   />
                 ))}
               </div>
