@@ -64,8 +64,6 @@ import {
 } from "@/components/ui/hover-card";
 import { addNotification } from "@/store/slices/notificationSlice";
 import SelectedTaskCard from "@/components/selected-task";
-import { toast } from "sonner";
-import { hasPermission } from "@/types/permission";
 
 // Sample data for the board
 
@@ -323,20 +321,8 @@ export default function BoardPage() {
 
   const handleSelectMember = (member: AssignedUser) => {
     if (member.id === null) return;
-
     setSelectedMember(member);
-
-    if (member) {
-      const filtered = columns.map((column) => ({
-        ...column,
-        tasks:
-          column.tasks?.filter((task) => task.assignedUserId === member.id) ||
-          [],
-      }));
-      setFilteredColumns(filtered);
-    } else {
-      setFilteredColumns(columns);
-    }
+    // No necesitamos hacer el filtrado aquí, ya que el useEffect se encargará de ello
   };
 
   const handleDeleteTask = async (taskId: number, columnId: number) => {
@@ -457,9 +443,7 @@ export default function BoardPage() {
         );
 
         await loadColumns();
-
         const freshColumns = await fetchBoardColumns(parseInt(params.id));
-
         if (
           freshColumns.result === ApiResponseTypes[ApiResponseTypes.success]
         ) {
@@ -503,9 +487,46 @@ export default function BoardPage() {
     
     const comment = selectedTask.comments?.find(c => c.id === commentId);
     if (!comment) return false;
-    
     return comment.userId === userData.id;
   }
+
+  useEffect(() => {
+    if (!columns.length) return;
+
+    if (selectedMember && searchTerm) {
+      const filtered = columns.map(column => ({
+        ...column,
+        tasks: column.tasks
+          ?.filter(task => task.assignedUserId === selectedMember.id)
+          ?.filter(task => 
+            task.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            task.description?.toLowerCase().includes(searchTerm.toLowerCase())
+          ) || []
+      }));
+      setFilteredColumns(filtered);
+    } 
+    else if (searchTerm) {
+      const filtered = columns.map(column => ({
+        ...column,
+        tasks: column.tasks
+          ?.filter(task => 
+            task.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            task.description?.toLowerCase().includes(searchTerm.toLowerCase())
+          ) || []
+      }));
+      setFilteredColumns(filtered);
+    }
+    else if (selectedMember) {
+      const filtered = columns.map(column => ({
+        ...column,
+        tasks: column.tasks?.filter(task => task.assignedUserId === selectedMember.id) || []
+      }));
+      setFilteredColumns(filtered);
+    }
+    else {
+      setFilteredColumns(columns);
+    }
+  }, [searchTerm, columns, selectedMember]);
 
   return (
     <div className="space-y-6">
