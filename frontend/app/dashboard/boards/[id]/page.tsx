@@ -16,7 +16,7 @@ import BoardHeader from "./components/BoardHeader";
 import TeamMemberFilter from "./components/TeamMemberFilter";
 import ColumnList from "./components/ColumnList";
 import NewTaskDialog from "./components/NewTaskDialog";
-import SelectedTaskCard from "@/components/selected-task";
+import SelectedTaskCard from "@/app/dashboard/boards/[id]/components/SelectedTask";
 
 export default function BoardPage() {
   const params = useParams();
@@ -51,7 +51,8 @@ export default function BoardPage() {
     handleDragOver,
     handleDrop,
     handleAddTask,
-    handleDeleteTask
+    handleDeleteTask,
+    handleChangeUser
   } = useTaskManagement(boardId, loadColumns, setSelectedTask);
 
   const {
@@ -103,6 +104,7 @@ export default function BoardPage() {
         {selectedTask && (
           <SelectedTaskCard
             key={`task-${selectedTask.id}-${selectedTask.comments?.length || 0}`}
+            teamMembers={teamMembers}
             selectedTask={selectedTask}
             newComment={newComment}
             columnId={selectedTask.boardColumnId || 0}
@@ -114,6 +116,7 @@ export default function BoardPage() {
             handleDeleteTask={handleDeleteTask}
             handleDeleteComment={handleDeleteComment}
             canDeleteComment={handleCanDeleteComment}
+            handleChangeUser={handleChangeUser}
           />
         )}
       </div>

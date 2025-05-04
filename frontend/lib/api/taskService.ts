@@ -41,3 +41,9 @@ export const deleteTaskComment = async (taskProps: TaskServiceProps, commentId: 
   await fetchAPI<void>(`/board/${boardId}/task/${taskId}/comment/${commentId}`, { method: "DELETE" })
 }
 
+export const changeAssignedUser = async (taskProps: TaskServiceProps, userId: number): Promise<void> => {
+  const { boardId, taskId, columnId }: TaskServiceProps = taskProps;
+  const body: { [key: string]: number } = { "userId": userId }
+  await fetchAPI<void>(`/board/${boardId}/column/${columnId}/task/${taskId}/assignUser`, { method: "PUT", body })
+} 
+

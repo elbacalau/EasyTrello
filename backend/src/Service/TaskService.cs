@@ -6,6 +6,7 @@ using AutoMapper;
 using backend.Data;
 using backend.Models;
 using backend.src.DTOs.TaskDTOs;
+using backend.src.Infrastructure.Helpers;
 using backend.src.Interfaces;
 using backend.src.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -14,10 +15,11 @@ using Microsoft.OpenApi.Any;
 
 namespace backend.src.Service
 {
-    public class TaskService(AppDbContext context, IMapper mapper) : ITaskService
+    public class TaskService(AppDbContext context, IMapper mapper, Functions functions) : ITaskService
     {
         private readonly AppDbContext _context = context;
         private readonly IMapper _mapper = mapper;
+        private readonly Functions _functions = functions;
 
         public async Task<List<TaskResponse>> GetTasksByColumn(int boardId, int columnId)
         {
@@ -146,6 +148,27 @@ namespace backend.src.Service
             }
             return mappedTasks;
 
+        }
+
+        public async Task<List<TaskResponse>> GetTasksByUser()
+        {
+            int userId = _functions.GetUserId();
+            
+            var userBoardIds = await _context.BoardUsers
+                .Where(bu => bu.UserId == userId)
+                .Select(bu => bu.BoardId)
+                .ToListAsync();
+            
+            var tasks = await _context.Tasks
+                .Include(t => t.BoardColumn)
+                .Include(t => t.Board)
+                .Include(t => t.AssignedUser)
+                .Include(t => t.Comments)
+                    .ThenInclude(c => c.User)
+                .Where(t => userBoardIds.Contains(t.BoardId))
+                .ToListAsync();
+
+            return _mapper.Map<List<TaskResponse>>(tasks);
         }
     }
 }

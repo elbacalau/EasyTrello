@@ -47,6 +47,7 @@ namespace backend.src.Service
             User user = await _context.Users.FindAsync(id)
                 ?? throw new ArgumentException("User not found");
 
+
             UserResponse userResponse = _mapper.Map<UserResponse>(user);
             return userResponse;
         }

@@ -6,11 +6,19 @@ import { Task, Comment } from "@/types/tasks";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PermissionType } from "@/types/permissionEnum";
+import { AssignedUser } from "@/types/userData";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface SelectedTaskCardProps {
   selectedTask: Task;
   newComment: string;
   columnId: number;
+  teamMembers: AssignedUser[];
   canDeleteComment: (commentId: number) => boolean;
   setNewComment: (comment: string) => void;
   handleAddComment: () => void;
@@ -19,13 +27,14 @@ interface SelectedTaskCardProps {
   getPriorityColor: (priority: number) => string;
   handleDeleteTask: (taskId: number, columnId: number) => void;
   handleDeleteComment: (commentId: number, taskId: number) => void;
+  handleChangeUser: (taskId: number, userId: number, columnId: number) => void;
 }
 
 const CommentItem = ({
   comment,
   formatCommentTime,
   onDelete,
-  canDeleteComment
+  canDeleteComment,
 }: {
   comment: Comment;
   formatCommentTime: (timestamp: string | Date | null) => string;
@@ -33,7 +42,7 @@ const CommentItem = ({
   canDeleteComment: (commentId: number) => boolean;
 }) => {
   const [showDelete, setShowDelete] = useState(false);
-  
+
   const canDelete = canDeleteComment(comment.id);
 
   return (
@@ -77,20 +86,37 @@ const CommentItem = ({
 const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
   selectedTask,
   newComment,
+  teamMembers,
+  columnId,
   setNewComment,
   handleAddComment,
   formatDate,
   formatCommentTime,
   getPriorityColor,
   handleDeleteTask,
-  columnId,
   handleDeleteComment,
   canDeleteComment,
+  handleChangeUser,
 }) => {
+  const [showDispUsers, setShowDispUsers] = useState<boolean>(false);
+
   useEffect(() => {}, [selectedTask]);
+
+  useEffect(() => {
+    setShowDispUsers(false);
+  }, [selectedTask?.assignedUserId]);
 
   const onDeleteComment = (commentId: number) => {
     handleDeleteComment(commentId, selectedTask.id!);
+  };
+
+  const onChangedAssignedUser = () => {
+    setShowDispUsers(true);
+  };
+
+  const handleUserChange = (taskId: number, userId: number, columnId: number) => {
+    handleChangeUser(taskId, userId, columnId);
+    setShowDispUsers(false); 
   };
 
   return (
@@ -143,10 +169,10 @@ const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
 
             <div>
               <h3 className="text-sm font-medium mb-2">Assignee</h3>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors w-fit p-2 rounded-md cursor-pointer">
                 {selectedTask.assignedUser ? (
                   <>
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-8 w-8" onClick={onChangedAssignedUser}>
                       <AvatarImage
                         src={`https://i.pravatar.cc/150?u=${selectedTask.assignedUser.firstName}`}
                         alt={selectedTask.assignedUser.firstName || ""}
@@ -166,6 +192,40 @@ const SelectedTaskCard: React.FC<SelectedTaskCardProps> = ({
                     Unassigned
                   </span>
                 )}
+
+                {showDispUsers ? (
+                  <div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          Asignar usuario
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        {teamMembers.map((member) => (
+                          <DropdownMenuItem
+                            key={member.id}
+                            onClick={() => selectedTask.id && handleUserChange(selectedTask.id, member.id, selectedTask.boardColumnId!)}
+                          >
+                            <Avatar className="h-6 w-6 mr-2">
+                              <AvatarImage
+                                src={`https://i.pravatar.cc/150?u=${member.firstName}`}
+                                alt={member.firstName || ""}
+                              />
+                              <AvatarFallback>
+                                {member.firstName?.[0] || ""}
+                                {member.lastName?.[0] || ""}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm">
+                              {member.firstName} {member.lastName}
+                            </span>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                ) : null}
               </div>
             </div>
 

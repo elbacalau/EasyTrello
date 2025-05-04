@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Task, TaskPriority, CreateTaskRequest, TaskStatus } from "@/types/tasks";
-import { createTask, deleteTask, moveToColumn } from "@/lib/api/taskService";
+import { changeAssignedUser, createTask, deleteTask, moveToColumn } from "@/lib/api/taskService";
 import { useAppDispatch } from "@/types/hooks";
 import { addNotification } from "@/store/slices/notificationSlice";
+import { fetchBoardColumns } from "@/lib/api/boardService";
+import { ApiResponse, ApiResponseTypes } from "@/types/apiResponse";
 
 export function useTaskManagement(
-  boardId: number, 
+  boardId: number,
   loadColumns: () => Promise<void>,
   setSelectedTask: (task: Task | null) => void
 ) {
@@ -88,7 +90,7 @@ export function useTaskManagement(
         labels: [],
         comments: [],
       });
-      
+
       dispatch(
         addNotification({
           type: "success",
@@ -131,7 +133,7 @@ export function useTaskManagement(
       );
 
       setSelectedTask(null);
-      
+
       await loadColumns();
     } catch (error) {
       console.error("Error al eliminar tarea:", error);
@@ -146,6 +148,60 @@ export function useTaskManagement(
     }
   };
 
+  const handleChangeUser = async (taskId: number, userId: number, columnId: number) => {
+    if (taskId === null || boardId === null || userId === null) return;
+
+    console.log(`Iniciando cambio de usuario - Tarea: ${taskId}, Usuario: ${userId}, Columna: ${columnId}`);
+
+    try {
+      console.log("Llamando a la API para cambiar usuario...");
+      await changeAssignedUser({ boardId, taskId, columnId }, userId);
+      console.log("API respondió exitosamente");
+
+      dispatch(
+        addNotification({
+          type: "success",
+          title: "Éxito",
+          message: "Usuario asignado correctamente",
+          duration: 5000,
+        })
+      );
+
+      await loadColumns();
+      const freshColumns = await fetchBoardColumns(boardId);
+      if (freshColumns.result === ApiResponseTypes[ApiResponseTypes.success]) {
+        let found = false;
+        console.log("Buscando tarea actualizada...");
+        for (const column of freshColumns.detail) {
+          const task = column.tasks?.find((t: Task) => t.id === taskId);
+          if (task) {
+            console.log("Tarea encontrada, actualizando selectedTask");
+            console.log("Nueva asignación:", task.assignedUserId);
+            setSelectedTask(task);
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          setSelectedTask(null);
+        }
+      } else {
+
+      }
+    } catch (error) {
+      console.error("Error al cambiar usuario asignado:", error);
+      dispatch(
+        addNotification({
+          type: "error",
+          title: "Error",
+          message: "No se pudo cambiar el usuario asignado",
+          duration: 5000,
+        })
+      );
+    }
+  }
+
   return {
     newTask,
     setNewTask,
@@ -156,5 +212,6 @@ export function useTaskManagement(
     handleDrop,
     handleAddTask,
     handleDeleteTask,
+    handleChangeUser,
   };
 } 

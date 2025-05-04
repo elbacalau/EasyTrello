@@ -1,6 +1,7 @@
 using backend.Models;
 using backend.src.DTOs;
 using backend.src.DTOs.UserDTOs;
+using backend.src.Middleware;
 using backend.src.Models;
 using backend.src.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -18,6 +19,7 @@ namespace backend.src.Controllers
 
         // endpoint para crear el usuario
         [HttpPost]
+        
         public async Task<IActionResult> CreateUser([FromBody] User user)
         {
             if (user == null)

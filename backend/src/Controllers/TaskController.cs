@@ -14,6 +14,17 @@ namespace backend.src.Controllers
     {   
         private readonly TaskService _taskService = task;
 
+        [HttpGet("~/api/tasks/user")]
+        public async Task<IActionResult> GetTasksByUser()
+        {
+            var tasks = await _taskService.GetTasksByUser();
+            return Ok(new ApiResponse<List<TaskResponse>>
+            {
+                Result = "success",
+                Detail = tasks
+            });
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetTasks(int boardId, int columnId)
         {
@@ -89,5 +100,7 @@ namespace backend.src.Controllers
                 Detail = taskResponse
             });
         }
+
+        
     }
 }
