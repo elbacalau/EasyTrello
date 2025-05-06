@@ -1,32 +1,32 @@
 import { AssignedUser } from "./userData";
 
 export interface Task {
-  id?:             number;
-  name?:           string;
-  description?:    string;
-  createdAt?:      Date;
-  updatedAt?:      null;
-  dueDate?:        Date | null;
-  status?:         TaskStatus;
-  priority?:       TaskPriority;
-  completed?:      boolean;
-  boardColumnId?:  number;
-  columnName?:     string;
-  boardId?:        number;
-  boardName?:      null;
+  id?: number;
+  name?: string;
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: null;
+  dueDate?: Date | null;
+  status?: string | TaskStatus;
+  priority?: string | TaskPriority;
+  completed?: boolean;
+  boardColumnId?: number;
+  columnName?: string;
+  boardId?: number;
+  boardName?: string | null;
   assignedUserId?: number;
-  assignedUser?:   AssignedUser;
-  labels?:         string[];
-  comments?:       Comment[];
+  assignedUser?: AssignedUser;
+  labels?: string[];
+  comments?: Comment[];
 }
 
 
 export interface Comment {
-  id:        number;
-  comment:   string;
+  id: number;
+  comment: string;
   createdAt: Date;
-  userId:    number;
-  userName:  string;
+  userId: number;
+  userName: string;
 }
 
 export interface CreateComment {

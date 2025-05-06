@@ -41,11 +41,11 @@ export const useAuth = () => {
       dispatch(showLoader());
       const response = await apiLogin(loginForm.email, loginForm.password);
 
-  
+
       if (response.result === "success") {
-        console.log({response});
-        
-        
+        console.log({ response });
+
+
         const user = await userData();
         return user !== null;
       }

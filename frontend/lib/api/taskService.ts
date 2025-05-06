@@ -1,5 +1,6 @@
 import { CreateTaskRequest, Task } from "@/types/tasks";
 import { fetchAPI, API_URL } from "./httpClient";
+import { ApiResponse, ApiResponseTypes } from "@/types/apiResponse";
 export interface TaskServiceProps {
   boardId: number;
   columnId?: number;
@@ -33,7 +34,7 @@ export const deleteTask = async (taskProps: TaskServiceProps) => {
 export const addTaskComment = async (taskProps: TaskServiceProps, comment: string): Promise<void> => {
   const { boardId, taskId }: TaskServiceProps = taskProps;
   const body: { [key: string]: string } = { "comment": comment }
-  await fetchAPI<void>(`/board/${boardId}/task/${taskId}/comment`, { method: "POST",  body})
+  await fetchAPI<void>(`/board/${boardId}/task/${taskId}/comment`, { method: "POST", body })
 }
 
 export const deleteTaskComment = async (taskProps: TaskServiceProps, commentId: number): Promise<void> => {
@@ -45,5 +46,9 @@ export const changeAssignedUser = async (taskProps: TaskServiceProps, userId: nu
   const { boardId, taskId, columnId }: TaskServiceProps = taskProps;
   const body: { [key: string]: number } = { "userId": userId }
   await fetchAPI<void>(`/board/${boardId}/column/${columnId}/task/${taskId}/assignUser`, { method: "PUT", body })
-} 
+}
+
+export const getAllTaskUser = () => {
+  return fetchAPI<Task[]>(`/tasks/user`);
+}
 
