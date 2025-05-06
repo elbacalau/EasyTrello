@@ -124,13 +124,19 @@ namespace backend.src.Service
         public async Task<TaskResponse> MoveTaskToColumn(int taskId, int boardId, int sourceColumnId, int targetColumnId)
         {
          
-            var task = await _context.Tasks
+            TaskModel? task = await _context.Tasks
                 .FirstOrDefaultAsync(t => t.Id == taskId && t.BoardColumnId == sourceColumnId)
                 ?? throw new ArgumentException("Tarea no encontrada en la columna de origen");
 
-            var targetColumn = await _context.BoardColumns
+            BoardColumn? targetColumn = await _context.BoardColumns
                 .FirstOrDefaultAsync(c => c.Id == targetColumnId && c.BoardId == boardId)
                 ?? throw new ArgumentException("Columna de destino no encontrada en el tablero");
+
+
+            if (targetColumnId == 3 || targetColumn!.ColumnName == "Done") {
+              task.Completed = true;
+            }
+            
             task.BoardColumnId = targetColumnId;
             await _context.SaveChangesAsync();
 

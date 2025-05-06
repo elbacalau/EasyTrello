@@ -32,12 +32,7 @@ namespace backend.src.Infrastructure.Mapper
                     PhoneNumber = bu.User.PhoneNumber,
                     IsActive = bu.User.IsActive
                 })))
-                .ForMember(dest => dest.BoardColumns, opt => opt.MapFrom(src => src.Columns.Select(c => new BoardColumnResponse
-                {
-                    Id = c.Id,
-                    ColumnName = c.ColumnName,
-                    BoardId = c.BoardId
-                })));
+                .ForMember(dest => dest.BoardColumns, opt => opt.MapFrom(src => src.Columns));
 
             // map boardcolumn to boardcolumnresponse
             CreateMap<BoardColumn, BoardColumnResponse>()

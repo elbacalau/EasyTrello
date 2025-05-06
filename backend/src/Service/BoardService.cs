@@ -230,6 +230,7 @@ namespace backend.src.Service
                 .Include(b => b.BoardUsers)
                     .ThenInclude(bu => bu.User)
                 .Include(b => b.Columns)
+                    .ThenInclude(t => t.Tasks)
                 .ToListAsync();
 
 
@@ -298,11 +299,11 @@ namespace backend.src.Service
 
         public async Task<BoardStatsResponse> GetBoardStats(int boardId)
         {
-            var board = await _context.Boards
+            Board board = await _context.Boards
                 .FirstOrDefaultAsync(b => b.Id == boardId)
                 ?? throw new ArgumentException("Tablero no encontrado");
 
-            var columns = await _context.BoardColumns
+            List<BoardColumn> columns = await _context.BoardColumns
                 .Where(c => c.BoardId == boardId)
                 .Include(c => c.Tasks)
                 .AsNoTracking()
@@ -311,19 +312,16 @@ namespace backend.src.Service
             int pendingTasks = 0;
             int completedTasks = 0;
 
-            foreach (var column in columns)
+            foreach (BoardColumn col in columns)
             {
-                foreach (var task in column.Tasks)
-                {
-                    if (task.Completed)
-                    {
-                        completedTasks++;
-                    }
-                    else
-                    {
-                        pendingTasks++;
-                    }
+              for (int i = 0; i < col.Tasks.Count; i++) {
+                TaskModel task = col.Tasks[i];
+                if (task.Completed) {
+                  completedTasks++;
+                } else {
+                  pendingTasks++;
                 }
+              }
             }
 
             return new BoardStatsResponse

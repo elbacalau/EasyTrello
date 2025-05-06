@@ -3,7 +3,7 @@ import { BoardColumn } from "@/types/boardColumn";
 import { Task } from "@/types/tasks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { CheckCircle2, Plus } from "lucide-react";
 import TaskItem from "./TaskItem";
 
 interface TaskColumnProps {
@@ -46,7 +46,16 @@ export default function TaskColumn({
         <CardHeader className="py-3 px-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium">
-              {column.columnName} ({column.tasks?.length || 0})
+              {column.columnName === "Done" ? (
+                <div className="flex items-center gap-3">
+                  {column.columnName} ({column.tasks?.length || 0})
+                  <CheckCircle2 color="green" size={16} />
+                </div>
+              ) : (
+                <>
+                  {column.columnName} ({column.tasks?.length || 0})
+                </>
+              )}
             </CardTitle>
             {isViewer() ? null : (
               <Button
@@ -85,4 +94,4 @@ export default function TaskColumn({
       </Card>
     </div>
   );
-} 
+}
