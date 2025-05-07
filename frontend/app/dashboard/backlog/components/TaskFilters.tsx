@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 interface TaskFiltersProps {
   searchQuery: string;
@@ -54,7 +55,10 @@ export function TaskFilters({
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Backlog</h1>
+        <div className="gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">Backlog</h1>
+        </div>
+
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -69,7 +73,14 @@ export function TaskFilters({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b">
+      <Breadcrumb
+        segments={[
+          { name: "Dashboard", href: "/dashboard" },
+          { name: "Backlog", href: "/dashboard/backlog", current: true },
+        ]}
+      />
+
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-b">
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <Select value={selectedBoard} onValueChange={setSelectedBoard}>
             <SelectTrigger className="w-full sm:w-[180px]">

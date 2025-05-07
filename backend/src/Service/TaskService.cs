@@ -11,7 +11,6 @@ using backend.src.Interfaces;
 using backend.src.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Any;
 
 namespace backend.src.Service
 {
@@ -135,6 +134,15 @@ namespace backend.src.Service
 
             if (targetColumnId == 3 || targetColumn!.ColumnName == "Done") {
               task.Completed = true;
+              task.Status = Models.TaskStatus.Completed;
+            }
+
+            if (targetColumnId == 2 || targetColumn!.ColumnName == "In Progress") {
+              task.Status = Models.TaskStatus.InProgress;
+            }
+
+            if (targetColumnId == 1 || targetColumn!.ColumnName == "To Do") {
+              task.Status = Models.TaskStatus.ToDo;
             }
             
             task.BoardColumnId = targetColumnId;

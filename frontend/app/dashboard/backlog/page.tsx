@@ -5,6 +5,7 @@ import { useTasks } from "./hooks/useTasks";
 import { useTaskFilters } from "./hooks/useTaskFilters";
 import { TaskFilters } from "./components/TaskFilters";
 import { TaskTable } from "./components/TaskTable";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default function BacklogPage() {
   const { tasks, error } = useTasks();

@@ -44,8 +44,8 @@ export default function LoginPage() {
     resolver: yupResolver(schema),
     defaultValues: {
       email: "juan.perez@example.com",
-      password: "Password1"
-    }
+      password: "Password1",
+    },
   });
 
   const onSubmit = async (data: LoginFormInputs) => {
