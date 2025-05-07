@@ -1,18 +1,32 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { ProcessedTask } from "./useTasks";
+import { RootState } from "@/store/store";
+import {
+  setSearchQuery,
+  setSortColumn,
+  setSortDirection,
+  setSelectedStatus,
+  setSelectedPriority,
+  setSelectedAssignee,
+  setSelectedBoard,
+} from "@/store/slices/filterSlice";
 
 interface UseTaskFiltersProps {
   tasks: ProcessedTask[];
 }
 
 export function useTaskFilters({ tasks }: UseTaskFiltersProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortColumn, setSortColumn] = useState("dueDate");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
-  const [selectedPriority, setSelectedPriority] = useState<string[]>([]);
-  const [selectedAssignee, setSelectedAssignee] = useState<string[]>([]);
-  const [selectedBoard, setSelectedBoard] = useState<string>("_todos_");
+  const dispatch = useDispatch();
+  const {
+    searchQuery,
+    sortColumn,
+    sortDirection,
+    selectedStatus,
+    selectedPriority,
+    selectedAssignee,
+    selectedBoard,
+  } = useSelector((state: RootState) => state.filters);
 
   const statuses = useMemo(() => {
     if (tasks.length === 0) return [];
@@ -43,10 +57,10 @@ export function useTaskFilters({ tasks }: UseTaskFiltersProps) {
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      dispatch(setSortDirection(sortDirection === "asc" ? "desc" : "asc"));
     } else {
-      setSortColumn(column);
-      setSortDirection("asc");
+      dispatch(setSortColumn(column));
+      dispatch(setSortDirection("asc"));
     }
   };
 
@@ -133,17 +147,17 @@ export function useTaskFilters({ tasks }: UseTaskFiltersProps) {
 
   return {
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: (value: string) => dispatch(setSearchQuery(value)),
     sortColumn,
     sortDirection,
     selectedStatus,
-    setSelectedStatus,
+    setSelectedStatus: (value: string[]) => dispatch(setSelectedStatus(value)),
     selectedPriority,
-    setSelectedPriority,
+    setSelectedPriority: (value: string[]) => dispatch(setSelectedPriority(value)),
     selectedAssignee,
-    setSelectedAssignee,
+    setSelectedAssignee: (value: string[]) => dispatch(setSelectedAssignee(value)),
     selectedBoard,
-    setSelectedBoard,
+    setSelectedBoard: (value: string) => dispatch(setSelectedBoard(value)),
     statuses,
     priorities,
     assignees,

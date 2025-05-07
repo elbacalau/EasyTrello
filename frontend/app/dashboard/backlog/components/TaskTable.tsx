@@ -11,10 +11,9 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ProcessedTask } from "../hooks/useTasks";
-import { TaskPriority, TaskStatus } from "@/types/tasks";
-
+import { getPriorityColor, getStatusColor } from "@/lib/backlogFunctions";
+import { formatDate } from "@/lib/formatters";
 interface TaskTableProps {
   tasks: ProcessedTask[];
   sortColumn: string;
@@ -28,80 +27,11 @@ export function TaskTable({
   sortDirection,
   handleSort,
 }: TaskTableProps) {
-  const formatDate = (dateString?: Date | null) => {
-    if (!dateString) return "Sin fecha";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  const getStatusColor = (status?: string | number) => {
-    if (typeof status === "string") {
-      switch (status) {
-        case "ToDo":
-          return "bg-slate-500";
-        case "InProgress":
-          return "bg-amber-500";
-        case "Completed":
-          return "bg-green-500";
-        default:
-          return "bg-slate-500";
-      }
-    } else {
-      switch (status) {
-        case TaskStatus.ToDo:
-          return "bg-slate-500";
-        case TaskStatus.InProgress:
-          return "bg-amber-500";
-        case TaskStatus.Completed:
-          return "bg-green-500";
-        default:
-          return "bg-slate-500";
-      }
-    }
-  };
-
-  const getPriorityColor = (priority?: string | number) => {
-    if (typeof priority === "string") {
-      switch (priority) {
-        case "Critical":
-          return "bg-red-500/10 text-red-500 border-red-500/20";
-        case "High":
-          return "bg-destructive/10 text-destructive border-destructive/20";
-        case "Medium":
-          return "bg-amber-500/10 text-amber-500 border-amber-500/20";
-        case "Low":
-          return "bg-green-500/10 text-green-500 border-green-500/20";
-        default:
-          return "bg-muted text-muted-foreground";
-      }
-    } else {
-      switch (priority) {
-        case TaskPriority.Critical:
-          return "bg-red-500/10 text-red-500 border-red-500/20";
-        case TaskPriority.High:
-          return "bg-destructive/10 text-destructive border-destructive/20";
-        case TaskPriority.Medium:
-          return "bg-amber-500/10 text-amber-500 border-amber-500/20";
-        case TaskPriority.Low:
-          return "bg-green-500/10 text-green-500 border-green-500/20";
-        default:
-          return "bg-muted text-muted-foreground";
-      }
-    }
-  };
-
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto max-h-[calc(100vh-400px)] overflow-y-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[30px]">
-              <Checkbox />
-            </TableHead>
             <TableHead
               className="cursor-pointer"
               onClick={() => handleSort("name")}
@@ -210,9 +140,6 @@ export function TaskTable({
           {tasks.length > 0 ? (
             tasks.map((task) => (
               <TableRow key={task.id}>
-                <TableCell>
-                  <Checkbox checked={task.completed} />
-                </TableCell>
                 <TableCell>
                   <Link
                     href={`/dashboard/boards/${task.boardId}?task=${task.id}`}
